@@ -1,26 +1,264 @@
 @import "tailwindcss";
 
+/* ─── G300-ADM ELITE DARK SYSTEM (HIGH-END ENTERPRISE) ────── */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --color-bg:              #05070a; /* Ultra Dark Petroleum */
+  --color-surface:         #121b28; /* Deep Teal Blue */
+  --color-surface-hover:   #1a2538;
+  --color-border:          #1e293b; /* Subtle Slate Border */
+  --color-border-glow:     rgba(59, 130, 246, 0.15);
+  
+  --color-primary:         #3b82f6; /* Electric Blue */
+  --color-accent:          #10b981; /* Emerald */
+  --color-danger:          #f43f5e; /* Rose */
+  
+  --color-text-main:       #f8fafc; /* Slate 50 */
+  --color-text-dim:        #94a3b8; /* Slate 400 */
+  --color-text-muted:      #475569; /* Slate 600 */
+  
+  --shadow-elite:          0 40px 100px rgba(0, 0, 0, 0.8);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-background: var(--color-bg);
+  --color-foreground: var(--color-text-main);
+  --font-inter: var(--font-inter);
+  --font-display: var(--font-outfit);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--color-bg);
+  color: var(--color-text-main);
+  font-family: var(--font-inter), sans-serif;
+  -webkit-font-smoothing: antialiased;
+  letter-spacing: -0.01em;
 }
+
+/* Typography Elite */
+h1, h2, h3, h4, .font-display {
+  font-family: var(--font-outfit), sans-serif;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+/* Premium Card */
+.pro-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 32px;
+  box-shadow: var(--shadow-elite);
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+.pro-card:hover {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Modal Input */
+.modal-input {
+  width: 100%;
+  background: #05070a;
+  border: 1px solid #1e293b;
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 13px;
+  color: #fff;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.modal-input::placeholder {
+  color: #334155;
+}
+
+.modal-input:focus {
+  border-color: rgba(59, 130, 246, 0.5);
+}
+
+/* Button Elite */
+.btn-pro {
+  background: var(--color-primary);
+  color: #fff;
+  font-weight: 700;
+  padding: 10px 20px;
+  border-radius: 12px;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  transition: all 0.2s ease;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+}
+
+.btn-pro:hover {
+  background: #2563eb;
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+  transform: translateY(-1px);
+}
+
+/* Table Elite (Subtle, Thin, Elegant - Vercel/Linear Style) */
+.pro-table {
+  width: 100%;
+  border-spacing: 0;
+  border-collapse: collapse; /* Collapse for thinner borders */
+}
+
+/* Date Picker Fix for Dark Theme */
+input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1) brightness(0.8);
+  cursor: pointer;
+}
+
+input[type="date"] {
+  color-scheme: dark;
+}
+
+.pro-table thead {
+  background: transparent;
+}
+
+.pro-table th {
+  font-size: 11px;
+  font-weight: 400;
+  color: #f1f5f9;
+  text-transform: none;
+  letter-spacing: -0.01em;
+  padding: 12px 16px;
+  text-align: left;
+  border: none !important; /* No borders anywhere */
+}
+
+.pro-table td {
+  padding: 14px 16px;
+  font-size: 13px;
+  color: #94a3b8;
+  border: none !important; /* No borders anywhere */
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  vertical-align: middle;
+}
+
+.pro-table tr {
+  transition: all 0.2s ease;
+}
+
+.pro-table tr:hover td {
+  background: rgba(255, 255, 255, 0.03);
+  color: #fff;
+}
+
+.pro-table tr:hover td:first-child {
+  box-shadow: inset 2px 0 0 var(--color-primary);
+}
+
+.pro-table tr {
+  border: none !important;
+}
+
+.pro-table tr:last-child td {
+  border-bottom: none;
+}
+
+/* Specific Value Styles */
+/* Subtle Value Styles */
+.val-id {
+  font-weight: 500;
+  font-size: 13px;
+  color: #64748b;
+  font-family: var(--font-mono);
+}
+
+.val-name {
+  font-weight: 400 !important;
+  color: #64748b; /* Slate 500 - Matching job title */
+  font-size: 12px;
+}
+
+.val-metric {
+  font-weight: 600;
+  font-size: 13px;
+  color: #fff;
+  text-align: right;
+}
+
+.val-negativo {
+  color: #f43f5e;
+  font-weight: 900;
+  font-size: 15px;
+}
+
+.val-positivo {
+  color: #10b981;
+  font-weight: 900;
+  font-size: 15px;
+}
+
+.val-ajustado {
+  color: var(--color-primary);
+  font-weight: 900;
+}
+
+.val-orig {
+  display: block;
+  font-size: 9px;
+  font-weight: 800;
+  color: #334155;
+  margin-top: 6px;
+  text-align: right;
+}
+
+.badge-adjusted {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  background: rgba(59, 130, 246, 0.08);
+  color: var(--color-primary);
+  font-size: 8px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  border-radius: 8px;
+  border: 1px solid rgba(59, 130, 246, 0.15);
+  margin-left: 12px;
+  vertical-align: middle;
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.05);
+}
+
+.badge-status {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid transparent;
+}
+
+.status-active {
+  background: rgba(16, 185, 129, 0.05);
+  color: #10b981;
+  border-color: rgba(16, 185, 129, 0.1);
+}
+
+.status-inactive {
+  background: rgba(244, 63, 94, 0.05);
+  color: #f43f5e;
+  border-color: rgba(244, 63, 94, 0.1);
+}
+
+/* Custom Scrollbar for Dark Theme */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-bg);
+}
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #334155;
+}
+
