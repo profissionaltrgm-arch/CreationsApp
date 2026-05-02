@@ -16,7 +16,14 @@ import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 
 export default function DashboardPage() {
-  const [stats, setStats] = useState({
+  const [stats, setStats] = useState<{
+    total: number;
+    active: number;
+    men: number;
+    women: number;
+    absencesThisMonth: number;
+    topSkills: any[];
+  }>({
     total: 0,
     active: 0,
     men: 0,
