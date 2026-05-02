@@ -284,11 +284,12 @@ export function AbsenceManager({ employeeId }: { employeeId: number }) {
                     <div className="absolute top-0 right-0 w-40 h-40 bg-blue-500/5 rounded-full blur-[60px] opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
 
                     <div className="w-24 flex flex-col relative z-10">
+                      {/* ✅ FIX: + 'T00:00:00' evita interpretação UTC e problema de fuso horário */}
                       <span className="text-[11px] font-mono text-blue-500/80 font-medium">
-                        {new Date(abs.date).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' })}
+                        {new Date(abs.date + 'T00:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: '2-digit' })}
                       </span>
                       <span className="text-[9px] text-slate-700 font-bold uppercase mt-1 tracking-widest">
-                        {new Date(abs.date).toLocaleDateString('pt-BR', { weekday: 'short' })}
+                        {new Date(abs.date + 'T00:00:00').toLocaleDateString('pt-BR', { weekday: 'short' })}
                       </span>
                     </div>
 
