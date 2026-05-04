@@ -12,7 +12,8 @@ import {
   User as UserIcon,
   ShieldCheck,
   Calendar,
-  Zap
+  Zap,
+  CalendarDays
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRouter, usePathname } from "next/navigation";
@@ -30,6 +31,7 @@ export default function DashboardLayout({
   const menuItems = [
     { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
     { label: "Colaboradores", icon: Users, href: "/dashboard/employees" },
+    { label: "Planejamento", icon: CalendarDays, href: "/dashboard/planning" },
     { label: "Ausências", icon: Calendar, href: "/dashboard/absences" },
     { label: "Processos", icon: Zap, href: "/dashboard/processes" },
   ];

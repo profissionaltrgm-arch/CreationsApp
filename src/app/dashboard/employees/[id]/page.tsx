@@ -193,9 +193,9 @@ export default function EmployeeDetailPage() {
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
                   <InfoField label="Matrícula" value={`#${employee.employee_id}`} isMono />
-                  <InfoField label="Data de Admissão" value={employee.hire_date ? new Date(employee.hire_date).toLocaleDateString('pt-BR') : '—'} />
+                  <InfoField label="Data de Admissão" value={employee.hire_date ? new Date(employee.hire_date + "T12:00:00").toLocaleDateString('pt-BR') : '—'} />
                   <InfoField label="Gênero / Sexo" value={employee.sex || "Não informado"} />
-                  <InfoField label="Data de Nascimento" value={employee.birth_date ? new Date(employee.birth_date).toLocaleDateString('pt-BR') : "—"} />
+                  <InfoField label="Data de Nascimento" value={employee.birth_date ? new Date(employee.birth_date + "T12:00:00").toLocaleDateString('pt-BR') : "—"} />
                 </div>
               </div>
 

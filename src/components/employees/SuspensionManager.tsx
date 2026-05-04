@@ -150,7 +150,7 @@ export function SuspensionManager({ employeeId }: { employeeId: number }) {
                 <div>
                   <div className="flex items-center gap-4 mb-3">
                     <p className="text-lg font-bold text-white tracking-tight">
-                      {new Date(s.start_date).toLocaleDateString('pt-BR')} — {s.days} {s.days === 1 ? 'dia' : 'dias'}
+                      {new Date(s.start_date + "T12:00:00").toLocaleDateString('pt-BR')} — {s.days} {s.days === 1 ? 'dia' : 'dias'}
                     </p>
                     <span className="text-[9px] font-bold bg-rose-500/10 text-rose-500 px-2 py-1 rounded-lg border border-rose-500/10 uppercase tracking-widest">Efetivado</span>
                   </div>
