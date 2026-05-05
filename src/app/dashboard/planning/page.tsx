@@ -28,7 +28,7 @@ const HIERARCHY: { label: string; icon: React.ElementType; color: string }[] = [
   { label: "Encarregado",             icon: Shield,       color: "text-blue-400" },
   { label: "Líder",                   icon: Star,         color: "text-purple-400" },
   { label: "Analista",                icon: BarChart2,    color: "text-cyan-400" },
-  { label: "Assistente",              icon: Briefcase,    color: "text-slate-300" },
+  { label: "Assistente Administrativo",              icon: Briefcase,    color: "text-slate-300" },
   { label: "Auxiliar Administrativo", icon: ClipboardList,color: "text-slate-400" },
   { label: "Jovem Aprendiz",          icon: GraduationCap,color: "text-green-400" },
   { label: "Empilhador",              icon: Forklift,     color: "text-yellow-400" },
