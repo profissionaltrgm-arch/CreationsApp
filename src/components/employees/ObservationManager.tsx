@@ -142,9 +142,10 @@ export function ObservationManager({ employeeId }: { employeeId: number }) {
 
               <button 
                 onClick={() => handleDelete(obs.id)}
-                className="absolute top-10 right-10 p-3 text-slate-800 hover:text-rose-500 transition-all opacity-0 group-hover:opacity-100 z-20 hover:bg-rose-500/10 rounded-xl"
+                className="absolute top-6 right-8 p-3 text-slate-500 hover:text-rose-500 transition-all hover:bg-rose-500/10 rounded-xl flex items-center gap-2"
               >
-                <Trash2 size={20} />
+                <Trash2 size={18} />
+                <span className="text-[10px] font-bold uppercase tracking-widest hidden sm:inline-block">Excluir</span>
               </button>
             </div>
           ))
