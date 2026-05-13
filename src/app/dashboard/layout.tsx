@@ -63,7 +63,6 @@ export default function DashboardLayout({
             isHovered ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-10 pointer-events-none"
           )}>
             <span className="text-sm font-black tracking-[0.2em] text-white uppercase leading-none">G300</span>
-            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-1">Management Suite</span>
           </div>
         </div>
 
@@ -107,13 +106,6 @@ export default function DashboardLayout({
 
         {/* Sidebar Footer */}
         <div className="p-4 space-y-2 border-t border-white/5">
-           <button className="w-full flex items-center h-10 rounded-xl transition-all hover:bg-white/5 group overflow-hidden text-gray-500">
-             <div className="w-[40px] shrink-0 flex items-center justify-center">
-                <HelpCircle size={16} className="group-hover:text-white transition-colors" />
-             </div>
-             {isHovered && <span className="text-[10px] font-bold uppercase tracking-widest">Suporte</span>}
-           </button>
-
            <button
             onClick={() => router.push("/login")}
             className="w-full flex items-center h-12 rounded-2xl transition-all hover:bg-red-500/10 group overflow-hidden text-gray-500"
@@ -155,17 +147,14 @@ export default function DashboardLayout({
               <Search className="absolute left-4 text-gray-600 group-focus-within:text-blue-500 transition-colors" size={14} />
               <input
                 type="text"
-                placeholder="GLOBAL SEARCH (ALT + K)"
+                placeholder="BUSCA GLOBAL (ALT + K)"
                 className="bg-[#0D1528] border border-white/5 rounded-2xl pl-12 pr-6 py-2.5 text-[10px] font-black uppercase tracking-widest outline-none focus:border-blue-500/50 focus:w-80 transition-all w-64 text-white placeholder:text-gray-700"
               />
             </div>
           </div>
 
           <div className="flex items-center gap-6">
-            <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/5 border border-emerald-500/10">
-               <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-               <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest">Network Secure</span>
-            </div>
+
 
             <button className="relative p-2.5 rounded-2xl transition-all hover:bg-white/5 border border-transparent hover:border-white/5 text-gray-500 hover:text-white">
               <Bell size={18} />
@@ -174,8 +163,8 @@ export default function DashboardLayout({
 
             <div className="flex items-center gap-4 pl-4 border-l border-white/5">
               <div className="flex flex-col items-end leading-none">
-                <span className="text-[11px] font-black text-white uppercase tracking-tighter">System Administrator</span>
-                <span className="text-[9px] font-bold text-blue-500/80 uppercase tracking-widest mt-1">G300 Master Access</span>
+                <span className="text-[11px] font-black text-white uppercase tracking-tighter">Administrador</span>
+                <span className="text-[9px] font-bold text-blue-500/80 uppercase tracking-widest mt-1">Acesso Master</span>
               </div>
               <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 p-[1px] shadow-lg shadow-blue-500/10">
                  <div className="w-full h-full rounded-[calc(1rem-1px)] bg-[#05070A] flex items-center justify-center text-white">
