@@ -4,7 +4,6 @@ import { useState } from "react";
 import { 
   LayoutDashboard, 
   Users, 
-  Settings, 
   LogOut, 
   Menu, 
   Search,
@@ -13,124 +12,185 @@ import {
   ShieldCheck,
   Calendar,
   Zap,
-  CalendarDays
+  CalendarDays,
+  Settings,
+  HelpCircle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRouter, usePathname } from "next/navigation";
-import { supabase } from "@/lib/supabase";
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isHovered, setIsHovered] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
 
   const menuItems = [
-    { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
-    { label: "Colaboradores", icon: Users, href: "/dashboard/employees" },
-    { label: "Planejamento", icon: CalendarDays, href: "/dashboard/planning" },
-    { label: "Ausências", icon: Calendar, href: "/dashboard/absences" },
-    { label: "Processos", icon: Zap, href: "/dashboard/processes" },
+    { label: "Dashboard",     icon: LayoutDashboard, href: "/dashboard" },
+    { label: "Colaboradores", icon: Users,            href: "/dashboard/employees" },
+    { label: "Planejamento",  icon: CalendarDays,     href: "/dashboard/planning" },
+    { label: "Ausências",     icon: Calendar,         href: "/dashboard/absences" },
+    { label: "Processos",     icon: Zap,              href: "/dashboard/processes" },
   ];
 
   return (
-    <div className="min-h-screen flex bg-[#05070a] font-inter">
-      {/* Sidebar Vercel Style */}
-      <aside 
+    <div className="min-h-screen flex selection:bg-blue-500/30" style={{ background: "#05070A" }}>
+      {/* ── Sidebar Premium ───────────────────────────────────────── */}
+      <aside
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-64 bg-[#05070a] border-r border-white/5 transition-all duration-300 lg:relative lg:translate-x-0",
-          !isSidebarOpen && "-translate-x-full"
+          "fixed inset-y-0 left-0 z-50 flex flex-col transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] border-r border-white/5 shadow-[20px_0_40px_rgba(0,0,0,0.4)] overflow-hidden",
+          isHovered ? "w-64" : "w-[72px]"
         )}
+        style={{
+          background: "linear-gradient(180deg, #05070A 0%, #080B10 100%)",
+        }}
       >
-        <div className="h-full flex flex-col p-6">
-          {/* Logo Minimalista */}
-          <div className="flex items-center gap-3 mb-10 px-2">
-            <div className="w-10 h-10 bg-blue-600 flex items-center justify-center rounded-xl shadow-lg shadow-blue-500/20">
-              <ShieldCheck size={20} className="text-white" />
-            </div>
-            <h1 className="text-[15px] font-display font-bold tracking-tight text-white">G300 ADM</h1>
+        {/* Logo Section */}
+        <div className="flex items-center gap-4 px-5 h-20 shrink-0">
+          <div
+            className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 shadow-[0_0_15px_rgba(59,130,246,0.3)] bg-blue-600 transition-transform duration-500 rotate-0 group-hover:rotate-12"
+          >
+            <ShieldCheck size={18} className="text-white" />
           </div>
+          <div className={cn(
+            "flex flex-col transition-all duration-500",
+            isHovered ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-10 pointer-events-none"
+          )}>
+            <span className="text-sm font-black tracking-[0.2em] text-white uppercase leading-none">G300</span>
+            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mt-1">Management Suite</span>
+          </div>
+        </div>
 
-          {/* Navigation */}
-          <nav className="flex-1 space-y-1">
-            {menuItems.map((item) => {
-              const isActive = pathname === item.href;
-              return (
-                <button
-                  key={item.href}
-                  onClick={() => router.push(item.href)}
+        {/* Navigation */}
+        <nav className="flex-1 px-3 space-y-2 mt-4">
+          {menuItems.map((item) => {
+            const isActive = pathname === item.href;
+            return (
+              <button
+                key={item.href}
+                onClick={() => router.push(item.href)}
+                className={cn(
+                  "w-full flex items-center h-12 rounded-2xl transition-all duration-300 relative group",
+                  isActive ? "bg-white/[0.06] shadow-xl" : "hover:bg-white/[0.03]"
+                )}
+              >
+                <div className="w-[48px] shrink-0 flex items-center justify-center">
+                   <item.icon size={20} className={cn(
+                     "transition-all duration-300",
+                     isActive ? "text-blue-500 drop-shadow-[0_0_8px_rgba(59,130,246,0.5)]" : "text-gray-500 group-hover:text-white"
+                   )} />
+                </div>
+                <span
                   className={cn(
-                    "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition-all",
-                    isActive 
-                      ? "text-white font-bold bg-[#121b28] border border-[#1e293b] shadow-xl shadow-black/20" 
-                      : "text-slate-500 hover:text-white hover:bg-white/5"
+                    "text-[12px] font-black uppercase tracking-widest whitespace-nowrap transition-all duration-500",
+                    isHovered ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-4 pointer-events-none"
                   )}
+                  style={{ color: isActive ? "#FFF" : "#6B7280" }}
                 >
-                  <item.icon size={18} />
                   {item.label}
-                </button>
-              );
-            })}
-          </nav>
+                </span>
+                
+                {/* Active Indicator G300 Style */}
+                {isActive && (
+                  <div className="absolute left-0 top-3 bottom-3 w-1 bg-blue-500 rounded-r-full shadow-[0_0_15px_rgba(59,130,246,0.8)]" />
+                )}
+              </button>
+            );
+          })}
+        </nav>
 
-          {/* Footer Sidebar */}
-          <div className="mt-auto pt-6 border-t border-white/5">
-            <button 
-              onClick={() => router.push("/login")}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-slate-500 hover:text-rose-500 transition-all"
+        {/* Sidebar Footer */}
+        <div className="p-4 space-y-2 border-t border-white/5">
+           <button className="w-full flex items-center h-10 rounded-xl transition-all hover:bg-white/5 group overflow-hidden text-gray-500">
+             <div className="w-[40px] shrink-0 flex items-center justify-center">
+                <HelpCircle size={16} className="group-hover:text-white transition-colors" />
+             </div>
+             {isHovered && <span className="text-[10px] font-bold uppercase tracking-widest">Suporte</span>}
+           </button>
+
+           <button
+            onClick={() => router.push("/login")}
+            className="w-full flex items-center h-12 rounded-2xl transition-all hover:bg-red-500/10 group overflow-hidden text-gray-500"
+           >
+            <div className="w-[44px] shrink-0 flex items-center justify-center">
+               <LogOut size={18} className="group-hover:text-red-500 transition-colors" />
+            </div>
+            <span
+              className={cn(
+                "text-[12px] font-black uppercase tracking-widest transition-all duration-500",
+                isHovered ? "opacity-100" : "opacity-0 pointer-events-none"
+              )}
             >
-              <LogOut size={18} />
-              Sair
-            </button>
-          </div>
+              Encerrar Sessão
+            </span>
+          </button>
         </div>
       </aside>
 
-      {/* Main Content Area Area */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* Header Ultra-Clean */}
-        <header className="h-16 bg-[#05070a]/80 backdrop-blur-xl border-b border-white/5 flex items-center justify-between px-10 sticky top-0 z-40">
-          <div className="flex items-center gap-4">
-            <button 
+      {/* Main Content Area */}
+      <div className={cn(
+        "flex-1 flex flex-col min-w-0 transition-all duration-500",
+        "pl-[72px]"
+      )}>
+        {/* Header Superior Premium */}
+        <header
+          className="h-16 flex items-center justify-between px-8 sticky top-0 z-40 border-b border-white/5 backdrop-blur-3xl"
+          style={{ background: "rgba(5,7,10,0.7)" }}
+        >
+          <div className="flex items-center gap-6">
+            <button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className="p-2 text-gray-500 hover:bg-gray-50 lg:hidden"
+              className="p-2 rounded-xl lg:hidden transition-colors hover:bg-white/5 text-gray-500"
             >
-              <Menu size={18} />
+              <Menu size={20} />
             </button>
-            <div className="relative hidden md:block w-72">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600" size={14} />
-              <input 
-                type="text" 
-                placeholder="Pesquisa rápida..."
-                className="w-full pl-11 pr-4 py-2 rounded-xl border border-white/5 bg-white/5 text-sm outline-none focus:border-blue-500/50 transition-all placeholder:text-slate-600 text-white"
+            
+            <div className="relative hidden md:flex items-center group">
+              <Search className="absolute left-4 text-gray-600 group-focus-within:text-blue-500 transition-colors" size={14} />
+              <input
+                type="text"
+                placeholder="GLOBAL SEARCH (ALT + K)"
+                className="bg-[#0D1528] border border-white/5 rounded-2xl pl-12 pr-6 py-2.5 text-[10px] font-black uppercase tracking-widest outline-none focus:border-blue-500/50 focus:w-80 transition-all w-64 text-white placeholder:text-gray-700"
               />
             </div>
           </div>
 
           <div className="flex items-center gap-6">
-            <button className="p-2 text-slate-500 hover:text-white transition-colors relative">
+            <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/5 border border-emerald-500/10">
+               <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+               <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest">Network Secure</span>
+            </div>
+
+            <button className="relative p-2.5 rounded-2xl transition-all hover:bg-white/5 border border-transparent hover:border-white/5 text-gray-500 hover:text-white">
               <Bell size={18} />
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-blue-500 rounded-full border-2 border-[#05070a]" />
+              <span className="absolute top-2.5 right-2.5 w-2 h-2 rounded-full bg-blue-600 border-2 border-[#050710] shadow-[0_0_8px_rgba(59,130,246,0.6)]" />
             </button>
-            <div className="h-6 w-px bg-white/5" />
-            <div className="flex items-center gap-3 px-3 py-1.5 rounded-xl hover:bg-white/5 cursor-pointer transition-all group">
-              <div className="w-8 h-8 rounded-full bg-slate-800 border border-white/5 flex items-center justify-center text-slate-400 group-hover:text-white transition-all overflow-hidden shadow-lg">
-                <UserIcon size={16} />
+
+            <div className="flex items-center gap-4 pl-4 border-l border-white/5">
+              <div className="flex flex-col items-end leading-none">
+                <span className="text-[11px] font-black text-white uppercase tracking-tighter">System Administrator</span>
+                <span className="text-[9px] font-bold text-blue-500/80 uppercase tracking-widest mt-1">G300 Master Access</span>
               </div>
-              <div className="flex flex-col">
-                <span className="text-[11px] font-bold text-white leading-none">Admin</span>
-                <span className="text-[9px] font-medium text-slate-500 uppercase tracking-wider mt-1">Superuser</span>
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 p-[1px] shadow-lg shadow-blue-500/10">
+                 <div className="w-full h-full rounded-[calc(1rem-1px)] bg-[#05070A] flex items-center justify-center text-white">
+                    <UserIcon size={18} />
+                 </div>
               </div>
             </div>
           </div>
         </header>
 
-        {/* Page Content Area Area */}
-        <main className="flex-1 p-10 overflow-y-auto bg-[#05070a] custom-scrollbar">
-          {children}
+        {/* Viewport Principal */}
+        <main className="flex-1 p-8 overflow-y-auto custom-scrollbar">
+          <div className="max-w-[1600px] mx-auto">
+            {children}
+          </div>
         </main>
       </div>
     </div>
