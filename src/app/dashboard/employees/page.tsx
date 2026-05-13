@@ -88,6 +88,73 @@ export default function EmployeesPage() {
   const [form, setForm] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [disciplinaryType, setDisciplinaryType] = useState("ADVERTÊNCIA VERBAL");
+  const [absenceHistory, setAbsenceHistory] = useState<any[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+  const [skills, setSkills] = useState<any[]>([]);
+  const [loadingSkills, setLoadingSkills] = useState(false);
+
+  const PREDEFINED_SKILLS = [
+    { name: "Transpaleteira", type: "Carteira / Habilitação", icon: Truck },
+    { name: "Técnico em Administração", type: "Formação Técnica", icon: Briefcase },
+    { name: "Técnico em Informática", type: "Formação Técnica", icon: Settings },
+  ];
+
+  async function fetchSkills(employeeId: number) {
+    setLoadingSkills(true);
+    const { data } = await supabase
+      .from('skills')
+      .select('*')
+      .eq('employee_id', employeeId);
+    setSkills(data || []);
+    setLoadingSkills(false);
+  }
+
+  async function handleToggleSkill(skillName: string) {
+    if (!selectedProfile) return;
+    
+    const existing = skills.find(s => s.name === skillName);
+    const newStatus = existing?.status === 'ativo' ? 'inativo' : 'ativo';
+    
+    if (existing) {
+      const { data, error } = await supabase
+        .from('skills')
+        .update({ status: newStatus })
+        .eq('id', existing.id)
+        .select()
+        .single();
+        
+      if (!error && data) {
+        setSkills(skills.map(s => s.id === existing.id ? data : s));
+      }
+    } else {
+      const { data, error } = await supabase
+        .from('skills')
+        .insert({
+          employee_id: selectedProfile.employee_id,
+          name: skillName,
+          status: newStatus,
+          proficiency: 'Básico' // Default
+        })
+        .select()
+        .single();
+        
+      if (!error && data) {
+        setSkills([...skills, data]);
+      }
+    }
+  }
+
+  async function fetchAbsenceHistory(employeeId: number) {
+    setLoadingHistory(true);
+    const { data } = await supabase
+      .from('absences')
+      .select('*')
+      .eq('employee_id', employeeId)
+      .order('date', { ascending: false });
+    setAbsenceHistory(data || []);
+    setLoadingHistory(false);
+  }
 
   async function handleConfirmAbsence() {
     if (!selectedProfile) return;
@@ -411,6 +478,8 @@ export default function EmployeesPage() {
                       onClick={() => {
                         setSelectedProfile(emp);
                         setActiveModalTab("resumo");
+                        fetchAbsenceHistory(emp.employee_id);
+                        fetchSkills(emp.employee_id);
                       }}
                       className="group transition-all hover:bg-white/[0.03] relative cursor-pointer"
                     >
@@ -1038,6 +1107,48 @@ export default function EmployeesPage() {
                                </div>
                             </div>
                          </div>
+
+                         <div className="bg-white/[0.02] border border-white/5 rounded-3xl p-8 mt-6">
+                            <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-6">Log de Ocorrências Auditadas</h3>
+                            <div className="space-y-4">
+                               {loadingHistory ? (
+                                  <div className="py-8 flex justify-center">
+                                     <Loader2 className="animate-spin text-blue-500" size={24} />
+                                  </div>
+                               ) : absenceHistory.length === 0 ? (
+                                  <div className="h-32 flex flex-col items-center justify-center opacity-20">
+                                     <Activity size={32} className="mb-4 text-gray-500" />
+                                     <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Nenhuma ocorrência registrada</p>
+                                  </div>
+                               ) : (
+                                  absenceHistory.map((record) => (
+                                     <div key={record.id} className="flex items-center justify-between p-4 bg-black/20 border border-white/5 rounded-2xl hover:border-white/10 transition-all group">
+                                        <div className="flex items-center gap-6">
+                                           <div className="w-1.5 h-8 rounded-full bg-red-500/50 group-hover:bg-red-500 transition-colors" />
+                                           <div>
+                                              <div className="flex items-center gap-3 mb-1">
+                                                <h4 className="text-sm font-bold text-white">{record.classification}</h4>
+                                                <span className="px-2 py-0.5 rounded-full bg-white/5 text-[9px] font-bold text-gray-400 uppercase tracking-widest border border-white/5">
+                                                  {record.treatment}
+                                                </span>
+                                              </div>
+                                              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                                                {new Date(record.date).toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit', year: '2-digit' })}
+                                                <span className="mx-2">•</span>
+                                                {record.root_cause || "Não mencionado"}
+                                              </p>
+                                           </div>
+                                        </div>
+                                        {record.observation && (
+                                           <div className="hidden md:block max-w-[200px] truncate text-[10px] text-gray-500 italic">
+                                              {record.observation}
+                                           </div>
+                                        )}
+                                     </div>
+                                  ))
+                               )}
+                            </div>
+                         </div>
                       </motion.div>
                     )}
 
@@ -1058,12 +1169,23 @@ export default function EmployeesPage() {
                                <div className="space-y-4">
                                   <div>
                                     <label className="text-[9px] font-bold text-gray-500 uppercase tracking-widest block mb-2">Tipo de Medida</label>
-                                    <select className="w-full bg-black/20 border border-white/5 rounded-xl py-3 px-4 text-xs font-bold text-white focus:outline-none appearance-none">
-                                      <option>ADVERTÊNCIA VERBAL</option>
-                                      <option>ADVERTÊNCIA ESCRITA</option>
-                                      <option>SUSPENSÃO (1 DIA)</option>
-                                      <option>SUSPENSÃO (3 DIAS)</option>
-                                    </select>
+                                    <div className="grid grid-cols-2 gap-2">
+                                      {["ADVERTÊNCIA VERBAL", "ADVERTÊNCIA ESCRITA"].map((tipo) => (
+                                        <button 
+                                          key={tipo}
+                                          onClick={() => setDisciplinaryType(tipo)}
+                                          className={cn(
+                                            "py-3 px-4 rounded-xl border text-[9px] font-bold uppercase tracking-wide text-left flex items-center justify-between transition-all",
+                                            disciplinaryType === tipo 
+                                              ? "bg-red-600/20 border-red-500/50 text-red-400 shadow-lg" 
+                                              : "bg-white/[0.02] border-white/5 text-gray-400 hover:border-red-500/30 hover:text-white"
+                                          )}
+                                        >
+                                          {tipo}
+                                          <div className={cn("w-2 h-2 rounded-full", disciplinaryType === tipo ? "bg-red-500" : "bg-red-500/20")} />
+                                        </button>
+                                      ))}
+                                    </div>
                                   </div>
                                   <div>
                                     <label className="text-[9px] font-bold text-gray-500 uppercase tracking-widest block mb-2">Descrição do Fato</label>
@@ -1094,15 +1216,63 @@ export default function EmployeesPage() {
                         initial={{ opacity: 0, scale: 0.98 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.98 }}
-                        className="h-full flex flex-col items-center justify-center space-y-4 py-20"
+                        className="space-y-6"
                       >
-                         <div className="w-16 h-16 rounded-3xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mb-4">
-                            <Settings className="text-blue-500 animate-spin-slow" size={32} />
+                         <div className="bg-white/[0.02] border border-white/5 rounded-3xl p-8">
+                            <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-6">Mapeamento de Competências</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                              {loadingSkills ? (
+                                <div className="col-span-full py-12 flex justify-center">
+                                  <Loader2 className="animate-spin text-blue-500" size={24} />
+                                </div>
+                              ) : (
+                                PREDEFINED_SKILLS.map((skill) => {
+                                  const Icon = skill.icon;
+                                  const existing = skills.find(s => s.name === skill.name);
+                                  const isActive = existing?.status === 'ativo';
+                                  
+                                  return (
+                                    <div 
+                                      key={skill.name}
+                                      onClick={() => handleToggleSkill(skill.name)}
+                                      className={cn(
+                                        "p-6 rounded-2xl border transition-all cursor-pointer relative overflow-hidden group",
+                                        isActive 
+                                          ? "bg-blue-600/10 border-blue-500/30" 
+                                          : "bg-white/[0.02] border-white/5 hover:border-white/10"
+                                      )}
+                                    >
+                                      {isActive && (
+                                        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-transparent pointer-events-none" />
+                                      )}
+                                      <div className="flex items-start justify-between relative z-10">
+                                        <div className="space-y-4">
+                                          <div className={cn(
+                                            "w-10 h-10 rounded-xl flex items-center justify-center transition-all",
+                                            isActive ? "bg-blue-500/20 text-blue-400" : "bg-black/20 text-gray-500"
+                                          )}>
+                                            <Icon size={20} />
+                                          </div>
+                                          <div>
+                                            <h4 className={cn("text-xs font-bold uppercase tracking-widest mb-1 transition-all", isActive ? "text-white" : "text-gray-400")}>
+                                              {skill.name}
+                                            </h4>
+                                            <p className="text-[9px] font-bold text-gray-600 uppercase tracking-widest">{skill.type}</p>
+                                          </div>
+                                        </div>
+                                        <div className={cn(
+                                          "w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all",
+                                          isActive ? "border-blue-500 bg-blue-500" : "border-white/10 bg-black/20"
+                                        )}>
+                                          {isActive && <Check size={10} className="text-white" />}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  );
+                                })
+                              )}
+                            </div>
                          </div>
-                         <h3 className="text-xl font-bold text-white uppercase tracking-widest">Em Desenvolvimento</h3>
-                         <p className="text-[10px] text-gray-500 font-bold uppercase tracking-[0.2em] max-w-xs text-center leading-relaxed">
-                            O módulo de mapeamento de competências e matriz de polivalência está sendo preparado.
-                         </p>
                       </motion.div>
                     )}
 
