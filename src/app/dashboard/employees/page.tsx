@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
 import { 
   Settings, ShieldAlert, ChevronDown, Calendar, Search, Filter, MoreVertical, X, Check, Loader2, Info, User, MessageSquare, Plus, FileText, Zap,
-  ChevronUp, Warehouse, Truck, Sun, Sunset, Moon, Shield, Users, Camera, Activity, AlertCircle, Briefcase
+  ChevronUp, Warehouse, Truck, Sun, Sunset, Moon, Shield, Users, Camera, Activity, AlertCircle, Briefcase, UserMinus, Award
 } from "lucide-react";
 import { ObservationManager } from "@/components/employees/ObservationManager";
 import { cn } from "@/lib/utils";

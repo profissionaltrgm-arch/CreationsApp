@@ -187,8 +187,8 @@ export default function DashboardLayout({
         </header>
 
         {/* Viewport Principal */}
-        <main className="flex-1 p-8 overflow-y-auto custom-scrollbar">
-          <div className="max-w-[1600px] mx-auto">
+        <main className="flex-1 overflow-y-auto custom-scrollbar">
+          <div className="w-full h-full">
             {children}
           </div>
         </main>
