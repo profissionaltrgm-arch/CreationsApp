@@ -14,7 +14,8 @@ import {
   Zap,
   CalendarDays,
   Settings,
-  HelpCircle
+  HelpCircle,
+  PackageSearch
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRouter, usePathname } from "next/navigation";
@@ -35,6 +36,7 @@ export default function DashboardLayout({
     { label: "Planejamento",  icon: CalendarDays,     href: "/dashboard/planning" },
     { label: "Ausências",     icon: Calendar,         href: "/dashboard/absences" },
     { label: "Processos",     icon: Zap,              href: "/dashboard/processes" },
+    { label: "Val. Picking",  icon: PackageSearch,    href: "/dashboard/picking" },
   ];
 
   return (
