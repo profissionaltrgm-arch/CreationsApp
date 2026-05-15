@@ -53,7 +53,7 @@ function formatDate(date: Date): string {
   return date.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
 }
 
-// ─── Sub-componentes ──────────────────────────────────────────────────────────
+// ─── StatCard elegante ────────────────────────────────────────────────────────
 
 function StatCard({
   label,
@@ -70,78 +70,103 @@ function StatCard({
   highlighted?: boolean;
   delay?: number;
 }) {
+  const accentColor = highlighted ? "text-blue-400" : "text-emerald-400";
+  const barColor    = highlighted ? "bg-blue-500"   : "bg-emerald-500";
+  const glowBg      = highlighted ? "bg-blue-500/10" : "bg-white/[0.015]";
+
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay }}
+      transition={{ duration: 0.6, delay, ease: [0.22, 1, 0.36, 1] }}
       className={cn(
-        "flex-1 min-w-[200px] rounded-[2rem] p-6 border transition-all relative overflow-hidden group",
+        "flex-1 min-w-[220px] rounded-[2rem] border transition-all relative overflow-hidden",
         highlighted
-          ? "bg-blue-600/10 border-blue-500/30 shadow-[0_0_30px_rgba(59,130,246,0.12)]"
-          : "bg-[#0D1528] border-white/5 hover:border-white/10 shadow-xl"
+          ? "bg-blue-600/[0.07] border-blue-500/25 shadow-[0_0_40px_rgba(59,130,246,0.1)]"
+          : "bg-[#0D1528] border-white/[0.06] hover:border-white/[0.1] shadow-xl"
       )}
     >
-      {/* Glow bg */}
+      {/* Glow decorativo */}
       <div className={cn(
-        "absolute top-0 right-0 w-40 h-40 blur-[80px] rounded-full pointer-events-none -mr-16 -mt-16",
-        highlighted ? "bg-blue-500/10" : "bg-white/[0.02]"
+        "absolute top-0 right-0 w-48 h-48 blur-[90px] rounded-full pointer-events-none -mr-20 -mt-20",
+        glowBg
       )} />
 
-      <p className="text-[9px] font-black uppercase tracking-[0.25em] text-gray-500 mb-4 relative z-10">
-        {label}
-      </p>
+      <div className="relative z-10 p-7 flex flex-col gap-5">
 
-      <div className="flex items-end gap-3 relative z-10">
-        <span className="text-4xl font-black text-white tracking-tighter leading-none">
-          {validadas}
-        </span>
-        <span className="text-xs text-gray-500 font-bold uppercase tracking-widest mb-1">
-          validadas
-        </span>
-        <span className={cn(
-          "ml-auto text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full border",
-          divergencias > 0
-            ? "bg-red-500/10 border-red-500/20 text-red-400"
-            : "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
-        )}>
-          {divergencias} diverg.
-        </span>
-      </div>
+        {/* Label */}
+        <p className="text-[10px] uppercase text-gray-500"
+           style={{ fontWeight: 300, letterSpacing: "0.22em" }}>
+          {label}
+        </p>
 
-      <div className="mt-4 flex items-center gap-2 relative z-10">
-        <div className="flex-1 h-1 bg-white/5 rounded-full overflow-hidden">
-          <motion.div
-            initial={{ width: 0 }}
-            animate={{ width: `${Math.min(acuracia, 100)}%` }}
-            transition={{ duration: 1.2, delay: delay + 0.3, ease: "circOut" }}
-            className={cn("h-full rounded-full", highlighted ? "bg-blue-500" : "bg-emerald-500")}
-          />
+        {/* Validadas + divergências */}
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex flex-col gap-1.5">
+            <span className="text-5xl text-white leading-none tracking-tight"
+                  style={{ fontWeight: 200 }}>
+              {validadas}
+            </span>
+            <span className="text-[10px] uppercase text-gray-600"
+                  style={{ fontWeight: 300, letterSpacing: "0.15em" }}>
+              validadas
+            </span>
+          </div>
+
+          <span className={cn(
+            "mt-1 text-[10px] px-3 py-1.5 rounded-full border whitespace-nowrap",
+            divergencias > 0
+              ? "bg-red-500/10 border-red-500/20 text-red-400"
+              : "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+          )}
+          style={{ fontWeight: 300, letterSpacing: "0.08em" }}>
+            {divergencias} {divergencias === 1 ? "divergência" : "divergências"}
+          </span>
         </div>
-        <span className={cn(
-          "text-[11px] font-black",
-          highlighted ? "text-blue-400" : "text-emerald-400"
-        )}>
-          {acuracia.toFixed(2)}%
-        </span>
+
+        {/* Divisor */}
+        <div className="h-px bg-white/[0.04]" />
+
+        {/* Acurácia */}
+        <div className="flex flex-col gap-3">
+          <div className="flex items-baseline justify-between">
+            <span className="text-[10px] uppercase text-gray-600"
+                  style={{ fontWeight: 300, letterSpacing: "0.15em" }}>
+              Acurácia
+            </span>
+            <span className={cn("text-xl leading-none", accentColor)}
+                  style={{ fontWeight: 200, letterSpacing: "0.02em" }}>
+              {acuracia.toFixed(2)}%
+            </span>
+          </div>
+
+          <div className="h-[3px] w-full bg-white/[0.05] rounded-full overflow-hidden">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${Math.min(acuracia, 100)}%` }}
+              transition={{ duration: 1.4, delay: delay + 0.4, ease: "circOut" }}
+              className={cn("h-full rounded-full", barColor)}
+            />
+          </div>
+        </div>
       </div>
     </motion.div>
   );
 }
 
+// ─── StatusBadge ─────────────────────────────────────────────────────────────
+
 function StatusBadge({ status }: { status: StatusDivergencia }) {
   const isFalta = status === "Falta";
   return (
     <span className={cn(
-      "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border",
+      "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] border",
       isFalta
         ? "bg-red-500/10 border-red-500/20 text-red-400"
         : "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
-    )}>
-      {isFalta
-        ? <AlertTriangle size={10} />
-        : <CheckCircle2 size={10} />
-      }
+    )}
+    style={{ fontWeight: 300, letterSpacing: "0.1em" }}>
+      {isFalta ? <AlertTriangle size={10} /> : <CheckCircle2 size={10} />}
       {status}
     </span>
   );
@@ -196,7 +221,7 @@ export default function PickingPage() {
 
       {/* ── Cards de Estatísticas ────────────────────────────────────────────── */}
       <div className="px-1">
-        <div className="flex items-center gap-2 mb-4">
+        <div className="flex items-center gap-2 mb-5">
           <TrendingUp size={14} className="text-blue-500" />
           <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
             Validação Picking G300
@@ -232,7 +257,7 @@ export default function PickingPage() {
         transition={{ duration: 0.5, delay: 0.35 }}
         className="px-1 pb-6"
       >
-        <div className="flex items-center gap-2 mb-4">
+        <div className="flex items-center gap-2 mb-5">
           <AlertTriangle size={14} className="text-yellow-500" />
           <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
             Divergências de Picking
@@ -247,9 +272,10 @@ export default function PickingPage() {
                   <th
                     key={col}
                     className={cn(
-                      "px-5 py-4 text-[9px] font-black uppercase tracking-[0.2em] text-gray-600",
+                      "px-5 py-4 text-[9px] uppercase text-gray-600",
                       ["Sistema", "Físico", "Diferença"].includes(col) ? "text-right" : "text-left"
                     )}
+                    style={{ fontWeight: 400, letterSpacing: "0.18em" }}
                   >
                     {col}
                   </th>
@@ -265,7 +291,8 @@ export default function PickingPage() {
                     <tr key={`g-${emp}`}>
                       <td
                         colSpan={7}
-                        className="px-5 py-2.5 text-[9px] font-black uppercase tracking-widest text-gray-600 bg-white/[0.02] border-y border-white/[0.03]"
+                        className="px-5 py-2.5 text-[9px] uppercase text-gray-600 bg-white/[0.02] border-y border-white/[0.03]"
+                        style={{ fontWeight: 300, letterSpacing: "0.2em" }}
                       >
                         Empresa: {emp}
                       </td>
@@ -286,18 +313,20 @@ export default function PickingPage() {
                           <td className="px-5 py-4 font-mono text-[10px] text-gray-400 group-hover:text-gray-300 transition-colors">
                             {d.posicao}
                           </td>
-                          <td className="px-5 py-4 text-gray-400 group-hover:text-gray-300 transition-colors">
+                          <td className="px-5 py-4 text-gray-400 group-hover:text-gray-300 transition-colors"
+                              style={{ fontWeight: 300 }}>
                             {d.codigo}
                           </td>
-                          <td className="px-5 py-4 text-gray-300 max-w-[240px] truncate">
+                          <td className="px-5 py-4 text-gray-300 max-w-[240px] truncate"
+                              style={{ fontWeight: 300 }}>
                             {d.descricao}
                           </td>
-                          <td className="px-5 py-4 text-right font-black text-white">{d.sistema}</td>
-                          <td className="px-5 py-4 text-right font-black text-white">{d.fisico}</td>
+                          <td className="px-5 py-4 text-right text-white" style={{ fontWeight: 300 }}>{d.sistema}</td>
+                          <td className="px-5 py-4 text-right text-white" style={{ fontWeight: 300 }}>{d.fisico}</td>
                           <td className={cn(
-                            "px-5 py-4 text-right font-black",
+                            "px-5 py-4 text-right",
                             diff < 0 ? "text-red-400" : diff > 0 ? "text-emerald-400" : "text-gray-400"
-                          )}>
+                          )} style={{ fontWeight: 400 }}>
                             {diff > 0 ? `+${diff}` : diff}
                           </td>
                         </motion.tr>
@@ -310,17 +339,19 @@ export default function PickingPage() {
             <tfoot>
               <tr className="border-t border-white/10 bg-white/[0.02]">
                 <td colSpan={4} />
-                <td className="px-5 py-4 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                  Total: {totalSistema}
+                <td className="px-5 py-4 text-right text-[10px] text-gray-500 uppercase"
+                    style={{ fontWeight: 300, letterSpacing: "0.15em" }}>
+                  Total Sistema: {totalSistema}
                 </td>
-                <td className="px-5 py-4 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                  Total: {totalFisico}
+                <td className="px-5 py-4 text-right text-[10px] text-gray-500 uppercase"
+                    style={{ fontWeight: 300, letterSpacing: "0.15em" }}>
+                  Total Físico: {totalFisico}
                 </td>
                 <td className={cn(
-                  "px-5 py-4 text-right text-[11px] font-black uppercase tracking-widest",
+                  "px-5 py-4 text-right text-[11px] uppercase",
                   totalDif < 0 ? "text-red-400" : totalDif > 0 ? "text-emerald-400" : "text-gray-400"
-                )}>
-                  {totalDif > 0 ? `+${totalDif}` : totalDif}
+                )} style={{ fontWeight: 400, letterSpacing: "0.1em" }}>
+                  Diferença: {totalDif > 0 ? `+${totalDif}` : totalDif}
                 </td>
               </tr>
             </tfoot>
