@@ -53,7 +53,7 @@ function formatDate(date: Date): string {
   return date.toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" });
 }
 
-// ─── StatCard elegante ────────────────────────────────────────────────────────
+// ─── StatCard ─────────────────────────────────────────────────────────────────
 
 function StatCard({
   label,
@@ -70,85 +70,78 @@ function StatCard({
   highlighted?: boolean;
   delay?: number;
 }) {
-  const accentColor = highlighted ? "text-blue-400" : "text-emerald-400";
-  const barColor    = highlighted ? "bg-blue-500"   : "bg-emerald-500";
-  const glowBg      = highlighted ? "bg-blue-500/10" : "bg-white/[0.015]";
+  const accentText = highlighted ? "text-blue-400"  : "text-emerald-400";
+  const barColor   = highlighted ? "bg-blue-500"    : "bg-emerald-500";
+  const glowBg     = highlighted ? "bg-blue-500/10" : "bg-white/[0.015]";
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 24 }}
+      initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, delay, ease: [0.22, 1, 0.36, 1] }}
+      transition={{ duration: 0.5, delay, ease: [0.22, 1, 0.36, 1] }}
       className={cn(
-        "flex-1 min-w-[220px] rounded-[2rem] border transition-all relative overflow-hidden",
+        "flex-1 min-w-[200px] rounded-2xl border transition-all relative overflow-hidden",
         highlighted
-          ? "bg-blue-600/[0.07] border-blue-500/25 shadow-[0_0_40px_rgba(59,130,246,0.1)]"
-          : "bg-[#0D1528] border-white/[0.06] hover:border-white/[0.1] shadow-xl"
+          ? "bg-blue-600/[0.07] border-blue-500/25 shadow-[0_0_30px_rgba(59,130,246,0.1)]"
+          : "bg-[#0D1528] border-white/[0.06] hover:border-white/10 shadow-xl"
       )}
     >
-      {/* Glow decorativo */}
       <div className={cn(
-        "absolute top-0 right-0 w-48 h-48 blur-[90px] rounded-full pointer-events-none -mr-20 -mt-20",
+        "absolute top-0 right-0 w-40 h-40 blur-[80px] rounded-full pointer-events-none -mr-16 -mt-16",
         glowBg
       )} />
 
-      <div className="relative z-10 p-7 flex flex-col gap-5">
+      <div className="relative z-10 px-5 py-4 flex flex-col gap-3">
 
         {/* Label */}
-        <p className="text-[10px] uppercase text-gray-500"
-           style={{ fontWeight: 300, letterSpacing: "0.22em" }}>
+        <span className="text-[9px] font-bold uppercase tracking-widest text-gray-500">
           {label}
-        </p>
+        </span>
 
-        {/* Validadas + divergências */}
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex flex-col gap-1.5">
-            <span className="text-5xl text-white leading-none tracking-tight"
-                  style={{ fontWeight: 200 }}>
+        {/* Linha principal: número + badge */}
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-baseline gap-2">
+            <span className="text-3xl font-bold text-white tracking-tight leading-none">
               {validadas}
             </span>
-            <span className="text-[10px] uppercase text-gray-600"
-                  style={{ fontWeight: 300, letterSpacing: "0.15em" }}>
+            <span className="text-[10px] font-bold uppercase tracking-widest text-gray-600">
               validadas
             </span>
           </div>
 
           <span className={cn(
-            "mt-1 text-[10px] px-3 py-1.5 rounded-full border whitespace-nowrap",
+            "text-[9px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full border whitespace-nowrap",
             divergencias > 0
               ? "bg-red-500/10 border-red-500/20 text-red-400"
               : "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
-          )}
-          style={{ fontWeight: 300, letterSpacing: "0.08em" }}>
+          )}>
             {divergencias} {divergencias === 1 ? "divergência" : "divergências"}
           </span>
         </div>
 
         {/* Divisor */}
-        <div className="h-px bg-white/[0.04]" />
+        <div className="h-px bg-white/[0.05]" />
 
         {/* Acurácia */}
-        <div className="flex flex-col gap-3">
-          <div className="flex items-baseline justify-between">
-            <span className="text-[10px] uppercase text-gray-600"
-                  style={{ fontWeight: 300, letterSpacing: "0.15em" }}>
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <span className="text-[9px] font-bold uppercase tracking-widest text-gray-500">
               Acurácia
             </span>
-            <span className={cn("text-xl leading-none", accentColor)}
-                  style={{ fontWeight: 200, letterSpacing: "0.02em" }}>
+            <span className={cn("text-sm font-bold tracking-tight", accentText)}>
               {acuracia.toFixed(2)}%
             </span>
           </div>
-
           <div className="h-[3px] w-full bg-white/[0.05] rounded-full overflow-hidden">
             <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${Math.min(acuracia, 100)}%` }}
-              transition={{ duration: 1.4, delay: delay + 0.4, ease: "circOut" }}
+              transition={{ duration: 1.4, delay: delay + 0.3, ease: "circOut" }}
               className={cn("h-full rounded-full", barColor)}
             />
           </div>
         </div>
+
       </div>
     </motion.div>
   );
@@ -160,12 +153,11 @@ function StatusBadge({ status }: { status: StatusDivergencia }) {
   const isFalta = status === "Falta";
   return (
     <span className={cn(
-      "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] border",
+      "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider border",
       isFalta
         ? "bg-red-500/10 border-red-500/20 text-red-400"
         : "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
-    )}
-    style={{ fontWeight: 300, letterSpacing: "0.1em" }}>
+    )}>
       {isFalta ? <AlertTriangle size={10} /> : <CheckCircle2 size={10} />}
       {status}
     </span>
@@ -202,7 +194,7 @@ export default function PickingPage() {
             <h1 className="text-xl font-bold tracking-tight text-white leading-none uppercase">
               Validação Picking
             </h1>
-            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-1.5 flex items-center gap-2">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-gray-500 mt-1.5 flex items-center gap-2">
               <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
               Semana {semana} · {formatDate(hoje)} · G300
             </p>
@@ -219,11 +211,11 @@ export default function PickingPage() {
         </div>
       </div>
 
-      {/* ── Cards de Estatísticas ────────────────────────────────────────────── */}
+      {/* ── Cards ───────────────────────────────────────────────────────────── */}
       <div className="px-1">
-        <div className="flex items-center gap-2 mb-5">
+        <div className="flex items-center gap-2 mb-4">
           <TrendingUp size={14} className="text-blue-500" />
-          <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
+          <h2 className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
             Validação Picking G300
           </h2>
         </div>
@@ -257,14 +249,14 @@ export default function PickingPage() {
         transition={{ duration: 0.5, delay: 0.35 }}
         className="px-1 pb-6"
       >
-        <div className="flex items-center gap-2 mb-5">
+        <div className="flex items-center gap-2 mb-4">
           <AlertTriangle size={14} className="text-yellow-500" />
-          <h2 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
+          <h2 className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
             Divergências de Picking
           </h2>
         </div>
 
-        <div className="bg-[#0D1528] border border-white/5 rounded-[2rem] overflow-hidden shadow-2xl">
+        <div className="bg-[#0D1528] border border-white/5 rounded-2xl overflow-hidden shadow-2xl">
           <table className="w-full text-xs">
             <thead>
               <tr className="border-b border-white/5">
@@ -272,10 +264,9 @@ export default function PickingPage() {
                   <th
                     key={col}
                     className={cn(
-                      "px-5 py-4 text-[9px] uppercase text-gray-600",
+                      "px-5 py-3 text-[9px] font-bold uppercase tracking-widest text-gray-500",
                       ["Sistema", "Físico", "Diferença"].includes(col) ? "text-right" : "text-left"
                     )}
-                    style={{ fontWeight: 400, letterSpacing: "0.18em" }}
                   >
                     {col}
                   </th>
@@ -291,8 +282,7 @@ export default function PickingPage() {
                     <tr key={`g-${emp}`}>
                       <td
                         colSpan={7}
-                        className="px-5 py-2.5 text-[9px] uppercase text-gray-600 bg-white/[0.02] border-y border-white/[0.03]"
-                        style={{ fontWeight: 300, letterSpacing: "0.2em" }}
+                        className="px-5 py-2 text-[9px] font-bold uppercase tracking-[0.2em] text-blue-400 bg-white/[0.02] border-y border-white/[0.03]"
                       >
                         Empresa: {emp}
                       </td>
@@ -305,28 +295,26 @@ export default function PickingPage() {
                           initial={{ opacity: 0, x: -10 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: 0.4 + i * 0.05 }}
-                          className="border-b border-white/[0.03] hover:bg-white/[0.02] transition-colors group"
+                          className="border-b border-white/[0.03] hover:bg-blue-500/[0.05] transition-colors group"
                         >
-                          <td className="px-5 py-4">
+                          <td className="px-5 py-3">
                             <StatusBadge status={d.status} />
                           </td>
-                          <td className="px-5 py-4 font-mono text-[10px] text-gray-400 group-hover:text-gray-300 transition-colors">
+                          <td className="px-5 py-3 font-mono text-[10px] text-gray-400 group-hover:text-gray-300 transition-colors">
                             {d.posicao}
                           </td>
-                          <td className="px-5 py-4 text-gray-400 group-hover:text-gray-300 transition-colors"
-                              style={{ fontWeight: 300 }}>
+                          <td className="px-5 py-3 text-[11px] font-semibold text-gray-400 group-hover:text-gray-300 transition-colors">
                             {d.codigo}
                           </td>
-                          <td className="px-5 py-4 text-gray-300 max-w-[240px] truncate"
-                              style={{ fontWeight: 300 }}>
+                          <td className="px-5 py-3 text-[11px] font-semibold text-gray-300 max-w-[240px] truncate">
                             {d.descricao}
                           </td>
-                          <td className="px-5 py-4 text-right text-white" style={{ fontWeight: 300 }}>{d.sistema}</td>
-                          <td className="px-5 py-4 text-right text-white" style={{ fontWeight: 300 }}>{d.fisico}</td>
+                          <td className="px-5 py-3 text-right text-[11px] font-bold text-white">{d.sistema}</td>
+                          <td className="px-5 py-3 text-right text-[11px] font-bold text-white">{d.fisico}</td>
                           <td className={cn(
-                            "px-5 py-4 text-right",
+                            "px-5 py-3 text-right text-[11px] font-bold",
                             diff < 0 ? "text-red-400" : diff > 0 ? "text-emerald-400" : "text-gray-400"
-                          )} style={{ fontWeight: 400 }}>
+                          )}>
                             {diff > 0 ? `+${diff}` : diff}
                           </td>
                         </motion.tr>
@@ -339,18 +327,16 @@ export default function PickingPage() {
             <tfoot>
               <tr className="border-t border-white/10 bg-white/[0.02]">
                 <td colSpan={4} />
-                <td className="px-5 py-4 text-right text-[10px] text-gray-500 uppercase"
-                    style={{ fontWeight: 300, letterSpacing: "0.15em" }}>
+                <td className="px-5 py-3 text-right text-[9px] font-bold uppercase tracking-widest text-gray-500">
                   Total Sistema: {totalSistema}
                 </td>
-                <td className="px-5 py-4 text-right text-[10px] text-gray-500 uppercase"
-                    style={{ fontWeight: 300, letterSpacing: "0.15em" }}>
+                <td className="px-5 py-3 text-right text-[9px] font-bold uppercase tracking-widest text-gray-500">
                   Total Físico: {totalFisico}
                 </td>
                 <td className={cn(
-                  "px-5 py-4 text-right text-[11px] uppercase",
+                  "px-5 py-3 text-right text-[10px] font-bold uppercase tracking-widest",
                   totalDif < 0 ? "text-red-400" : totalDif > 0 ? "text-emerald-400" : "text-gray-400"
-                )} style={{ fontWeight: 400, letterSpacing: "0.1em" }}>
+                )}>
                   Diferença: {totalDif > 0 ? `+${totalDif}` : totalDif}
                 </td>
               </tr>
