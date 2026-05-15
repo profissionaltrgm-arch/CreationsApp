@@ -300,19 +300,19 @@ export default function PickingPage() {
                           <td className="px-5 py-3">
                             <StatusBadge status={d.status} />
                           </td>
-                          <td className="px-5 py-3 font-mono text-[10px] text-gray-400 group-hover:text-gray-300 transition-colors">
+                          <td className="px-5 py-3 font-mono text-[10px] font-light text-gray-500 group-hover:text-gray-400 transition-colors">
                             {d.posicao}
                           </td>
-                          <td className="px-5 py-3 text-[11px] font-semibold text-gray-400 group-hover:text-gray-300 transition-colors">
+                          <td className="px-5 py-3 text-[11px] font-light text-gray-500 group-hover:text-gray-400 transition-colors">
                             {d.codigo}
                           </td>
-                          <td className="px-5 py-3 text-[11px] font-semibold text-gray-300 max-w-[240px] truncate">
+                          <td className="px-5 py-3 text-[11px] font-light text-gray-400 group-hover:text-gray-300 max-w-[240px] truncate transition-colors">
                             {d.descricao}
                           </td>
-                          <td className="px-5 py-3 text-right text-[11px] font-bold text-white">{d.sistema}</td>
-                          <td className="px-5 py-3 text-right text-[11px] font-bold text-white">{d.fisico}</td>
+                          <td className="px-5 py-3 text-right text-[11px] font-light text-gray-300">{d.sistema}</td>
+                          <td className="px-5 py-3 text-right text-[11px] font-light text-gray-300">{d.fisico}</td>
                           <td className={cn(
-                            "px-5 py-3 text-right text-[11px] font-bold",
+                            "px-5 py-3 text-right text-[11px] font-normal",
                             diff < 0 ? "text-red-400" : diff > 0 ? "text-emerald-400" : "text-gray-400"
                           )}>
                             {diff > 0 ? `+${diff}` : diff}
