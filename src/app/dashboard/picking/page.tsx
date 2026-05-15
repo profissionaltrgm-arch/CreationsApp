@@ -201,14 +201,7 @@ export default function PickingPage() {
           </div>
         </div>
 
-        <div className="flex bg-[#0D1528] border border-white/5 p-1 rounded-xl">
-          <div className="flex items-center gap-2 px-3">
-            <Activity size={12} className="text-emerald-500" />
-            <span className="text-[10px] font-black text-emerald-500 uppercase tracking-tighter">
-              Sistema Conectado
-            </span>
-          </div>
-        </div>
+
       </div>
 
       {/* ── Cards ───────────────────────────────────────────────────────────── */}

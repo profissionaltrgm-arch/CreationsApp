@@ -145,14 +145,7 @@ export default function DashboardLayout({
               <Menu size={20} />
             </button>
             
-            <div className="relative hidden md:flex items-center group">
-              <Search className="absolute left-4 text-gray-600 group-focus-within:text-blue-500 transition-colors" size={14} />
-              <input
-                type="text"
-                placeholder="BUSCA GLOBAL (ALT + K)"
-                className="bg-[#0D1528] border border-white/5 rounded-2xl pl-12 pr-6 py-2.5 text-[10px] font-black uppercase tracking-widest outline-none focus:border-blue-500/50 focus:w-80 transition-all w-64 text-white placeholder:text-gray-700"
-              />
-            </div>
+
           </div>
 
           <div className="flex items-center gap-6">
