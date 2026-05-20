@@ -75,6 +75,10 @@ export default function EmployeesPage() {
   const [otherReason, setOtherReason] = useState<string>("");
   const [absenceObservation, setAbsenceObservation] = useState<string>("");
   const [selectedTreatment, setSelectedTreatment] = useState<string>("Descontar");
+  // ✅ NOVO: state para data da ausência
+  const [absenceDate, setAbsenceDate] = useState<string>(
+    new Date().toISOString().split("T")[0]
+  );
 
   useEffect(() => {
     if (selectedClassification === "Falta Justificada") {
@@ -134,7 +138,7 @@ export default function EmployeesPage() {
           employee_id: selectedProfile.employee_id,
           name: skillName,
           status: newStatus,
-          proficiency: 'Básico' // Default
+          proficiency: 'Básico'
         })
         .select()
         .single();
@@ -164,7 +168,8 @@ export default function EmployeesPage() {
         .from('absences')
         .insert([{
           employee_id: selectedProfile.employee_id,
-          date: new Date().toISOString().split('T')[0],
+          // ✅ ALTERADO: usa absenceDate em vez de new Date()
+          date: absenceDate,
           type: selectedClassification,
           reason: selectedRootCause === 'Outros' ? otherReason : selectedRootCause,
           treatment: selectedTreatment,
@@ -179,6 +184,8 @@ export default function EmployeesPage() {
       
       setAbsenceObservation("");
       setOtherReason("");
+      // ✅ NOVO: reseta a data para hoje após salvar
+      setAbsenceDate(new Date().toISOString().split("T")[0]);
       alert("Registro de ausência confirmado com sucesso!");
     } catch (err: any) {
       console.error(err);
@@ -202,8 +209,6 @@ export default function EmployeesPage() {
       setLoading(false);
     }
   }
-
-
 
   async function handleSaveEmployee(e: React.FormEvent) {
     e.preventDefault();
@@ -268,8 +273,6 @@ export default function EmployeesPage() {
   const sectors = useMemo(() => ["Todos", ...Array.from(new Set(employees.map(e => e.sector).filter(Boolean)))], [employees]);
   const processes = useMemo(() => ["Todos", ...Array.from(new Set(employees.map(e => e.process).filter(Boolean)))], [employees]);
   const shifts = useMemo(() => ["Todos", "Turno 1", "Turno 2", "Turno 3", "Turno ADM"], []);
-
-
 
   return (
     <div className="h-full flex flex-col space-y-4 animate-in fade-in duration-500 overflow-hidden">
@@ -483,7 +486,6 @@ export default function EmployeesPage() {
                       }}
                       className="group transition-all hover:bg-white/[0.03] relative cursor-pointer"
                     >
-                      {/* Efeito Lateral de Brilho */}
                       <td className="relative p-0 w-0">
                         <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500 scale-y-0 group-hover:scale-y-100 transition-transform duration-300 origin-top shadow-[0_0_15px_rgba(59,130,246,0.5)]" />
                       </td>
@@ -839,7 +841,7 @@ export default function EmployeesPage() {
         )}
       </AnimatePresence>
 
-      {/* Modal de Perfil do Colaborador (Comando Central) */}
+      {/* Modal de Perfil do Colaborador */}
       <AnimatePresence>
         {selectedProfile && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -857,7 +859,7 @@ export default function EmployeesPage() {
                 exit={{ opacity: 0, scale: 0.98, y: 10 }}
                 className="relative w-[95vw] h-[90vh] bg-[#0D1528] border border-white/10 rounded-[2rem] shadow-[0_30px_80px_rgba(0,0,0,0.8)] overflow-hidden flex flex-col"
               >
-                {/* Cabeçalho Superior (Header) */}
+                {/* Header */}
                 <div className="p-8 pb-6 border-b border-white/5 flex items-center justify-between bg-black/20">
                   <div className="flex items-center gap-6">
                     <div className="relative group/photo shrink-0">
@@ -912,7 +914,7 @@ export default function EmployeesPage() {
                   </div>
                 </div>
 
-                {/* Barra de Navegação (Tabs) */}
+                {/* Tabs */}
                 <div className="px-8 py-4 bg-[#0D1528] border-b border-white/5 flex items-center gap-2">
                   {[
                     { id: "resumo", label: "Resumo", icon: FileText },
@@ -937,7 +939,7 @@ export default function EmployeesPage() {
                   ))}
                 </div>
 
-                {/* Área de Conteúdo (Scrollable) */}
+                {/* Conteúdo */}
                 <div className="flex-1 overflow-y-auto custom-scrollbar p-8">
                   <AnimatePresence mode="wait">
                     {activeModalTab === "resumo" && (
@@ -995,9 +997,32 @@ export default function EmployeesPage() {
                         className="space-y-6"
                       >
                          <div className="bg-white/[0.02] border border-white/5 rounded-3xl p-8">
-                            <div className="flex items-center justify-between mb-8">
+                            <div className="flex items-center justify-between mb-6">
                                <h3 className="text-base font-bold text-white uppercase tracking-widest">Registrar Nova Ausência</h3>
                                <span className="px-3 py-1 rounded-full bg-red-500/10 border border-red-500/20 text-red-500 text-[9px] font-bold uppercase tracking-widest">Ocorrência</span>
+                            </div>
+
+                            {/* ✅ NOVO: Campo de Data da Ocorrência */}
+                            <div className="flex items-center gap-4 mb-8 pb-6 border-b border-white/5">
+                              <div className="flex items-center gap-3 bg-black/20 border border-white/5 rounded-xl px-5 py-3 hover:border-blue-500/30 transition-colors">
+                                <Calendar size={14} className="text-blue-500/70" />
+                                <label className="text-[9px] font-bold text-gray-500 uppercase tracking-widest whitespace-nowrap">
+                                  Data da Ocorrência
+                                </label>
+                                <input
+                                  type="date"
+                                  value={absenceDate}
+                                  onChange={e => setAbsenceDate(e.target.value)}
+                                  className="bg-transparent border-none outline-none text-xs font-bold text-white cursor-pointer"
+                                />
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => setAbsenceDate(new Date().toISOString().split("T")[0])}
+                                className="text-[9px] font-bold text-blue-500/70 hover:text-blue-400 uppercase tracking-widest transition-colors"
+                              >
+                                Hoje
+                              </button>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -1005,7 +1030,7 @@ export default function EmployeesPage() {
                                   <div>
                                     <label className="text-[9px] font-bold text-gray-500 uppercase tracking-widest block mb-3">Classificação</label>
                                     <div className="grid grid-cols-2 gap-2">
-                                      {["Falta Justificada", "Falta Injustificada", "Falta Parcial", "Atraso", "Sa\u00edda Antecipada", "Suspens\u00e3o", "Afastamento"].map((tipo) => (
+                                      {["Falta Justificada", "Falta Injustificada", "Falta Parcial", "Atraso", "Saída Antecipada", "Suspensão", "Afastamento"].map((tipo) => (
                                          <button 
                                            key={tipo}
                                            onClick={() => setSelectedClassification(tipo)}
@@ -1169,150 +1194,4 @@ export default function EmployeesPage() {
                                <div className="space-y-4">
                                   <div>
                                     <label className="text-[9px] font-bold text-gray-500 uppercase tracking-widest block mb-2">Tipo de Medida</label>
-                                    <div className="grid grid-cols-2 gap-2">
-                                      {["ADVERTÊNCIA VERBAL", "ADVERTÊNCIA ESCRITA"].map((tipo) => (
-                                        <button 
-                                          key={tipo}
-                                          onClick={() => setDisciplinaryType(tipo)}
-                                          className={cn(
-                                            "py-3 px-4 rounded-xl border text-[9px] font-bold uppercase tracking-wide text-left flex items-center justify-between transition-all",
-                                            disciplinaryType === tipo 
-                                              ? "bg-red-600/20 border-red-500/50 text-red-400 shadow-lg" 
-                                              : "bg-white/[0.02] border-white/5 text-gray-400 hover:border-red-500/30 hover:text-white"
-                                          )}
-                                        >
-                                          {tipo}
-                                          <div className={cn("w-2 h-2 rounded-full", disciplinaryType === tipo ? "bg-red-500" : "bg-red-500/20")} />
-                                        </button>
-                                      ))}
-                                    </div>
-                                  </div>
-                                  <div>
-                                    <label className="text-[9px] font-bold text-gray-500 uppercase tracking-widest block mb-2">Descrição do Fato</label>
-                                    <textarea 
-                                      className="w-full bg-black/20 border border-white/5 rounded-xl p-4 text-xs font-medium text-white focus:outline-none min-h-[150px] resize-none"
-                                      placeholder="Descreva detalhadamente o motivo da medida..."
-                                    />
-                                  </div>
-                                  <button className="w-full py-4 rounded-xl bg-red-600/80 text-white text-[10px] font-bold uppercase tracking-widest hover:bg-red-600 transition-all">
-                                    Aplicar Medida
-                                  </button>
-                               </div>
-                            </div>
-                            <div className="bg-white/[0.02] border border-white/5 rounded-3xl p-8">
-                               <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-6">Histórico Disciplinar</h3>
-                               <div className="h-[300px] flex flex-col items-center justify-center opacity-10">
-                                  <ShieldAlert size={48} className="mb-4" />
-                                  <p className="text-[10px] font-bold uppercase tracking-widest">Nenhuma ocorrência</p>
-                               </div>
-                            </div>
-                         </div>
-                      </motion.div>
-                    )}
-
-                    {activeModalTab === "habilidades" && (
-                      <motion.div
-                        key="habilidades"
-                        initial={{ opacity: 0, scale: 0.98 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.98 }}
-                        className="space-y-6"
-                      >
-                         <div className="bg-white/[0.02] border border-white/5 rounded-3xl p-8">
-                            <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-6">Mapeamento de Competências</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                              {loadingSkills ? (
-                                <div className="col-span-full py-12 flex justify-center">
-                                  <Loader2 className="animate-spin text-blue-500" size={24} />
-                                </div>
-                              ) : (
-                                PREDEFINED_SKILLS.map((skill) => {
-                                  const Icon = skill.icon;
-                                  const existing = skills.find(s => s.name === skill.name);
-                                  const isActive = existing?.status === 'ativo';
-                                  
-                                  return (
-                                    <div 
-                                      key={skill.name}
-                                      onClick={() => handleToggleSkill(skill.name)}
-                                      className={cn(
-                                        "p-6 rounded-2xl border transition-all cursor-pointer relative overflow-hidden group",
-                                        isActive 
-                                          ? "bg-blue-600/10 border-blue-500/30" 
-                                          : "bg-white/[0.02] border-white/5 hover:border-white/10"
-                                      )}
-                                    >
-                                      {isActive && (
-                                        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-transparent pointer-events-none" />
-                                      )}
-                                      <div className="flex items-start justify-between relative z-10">
-                                        <div className="space-y-4">
-                                          <div className={cn(
-                                            "w-10 h-10 rounded-xl flex items-center justify-center transition-all",
-                                            isActive ? "bg-blue-500/20 text-blue-400" : "bg-black/20 text-gray-500"
-                                          )}>
-                                            <Icon size={20} />
-                                          </div>
-                                          <div>
-                                            <h4 className={cn("text-xs font-bold uppercase tracking-widest mb-1 transition-all", isActive ? "text-white" : "text-gray-400")}>
-                                              {skill.name}
-                                            </h4>
-                                            <p className="text-[9px] font-bold text-gray-600 uppercase tracking-widest">{skill.type}</p>
-                                          </div>
-                                        </div>
-                                        <div className={cn(
-                                          "w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all",
-                                          isActive ? "border-blue-500 bg-blue-500" : "border-white/10 bg-black/20"
-                                        )}>
-                                          {isActive && <Check size={10} className="text-white" />}
-                                        </div>
-                                      </div>
-                                    </div>
-                                  );
-                                })
-                              )}
-                            </div>
-                         </div>
-                      </motion.div>
-                    )}
-
-                    {activeModalTab === "observacoes" && (
-                      <motion.div
-                        key="observacoes"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="h-full"
-                      >
-                        <ObservationManager employeeId={selectedProfile.employee_id} />
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              </motion.div>
-            </div>
-          )}
-        </AnimatePresence>
-    </div>
-  );
-}
-
-function seniority(hireDate: string) {
-  if (!hireDate) return "N/A";
-  const start = new Date(hireDate);
-  const now = new Date();
-  
-  let months = (now.getFullYear() - start.getFullYear()) * 12 + now.getMonth() - start.getMonth();
-  const days = now.getDate() - start.getDate();
-  if (days < 0) months -= 1;
-
-  if (months < 1) return "Recém-admitido";
-  if (months < 12) return `${months} ${months === 1 ? 'mês' : 'meses'}`;
-  
-  const years = Math.floor(months / 12);
-  const remMonths = months % 12;
-  
-  return remMonths === 0 
-    ? `${years} ${years === 1 ? 'ano' : 'anos'}` 
-    : `${years}a ${remMonths}m`;
-}
+                                    <div classNa
