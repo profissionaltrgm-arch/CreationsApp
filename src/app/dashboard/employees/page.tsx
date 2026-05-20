@@ -1194,4 +1194,150 @@ export default function EmployeesPage() {
                                <div className="space-y-4">
                                   <div>
                                     <label className="text-[9px] font-bold text-gray-500 uppercase tracking-widest block mb-2">Tipo de Medida</label>
-                                    <div classNa
+                                    <div className="grid grid-cols-2 gap-2">
+                                      {["ADVERTÊNCIA VERBAL", "ADVERTÊNCIA ESCRITA"].map((tipo) => (
+                                        <button 
+                                          key={tipo}
+                                          onClick={() => setDisciplinaryType(tipo)}
+                                          className={cn(
+                                            "py-3 px-4 rounded-xl border text-[9px] font-bold uppercase tracking-wide text-left flex items-center justify-between transition-all",
+                                            disciplinaryType === tipo 
+                                              ? "bg-red-600/20 border-red-500/50 text-red-400 shadow-lg" 
+                                              : "bg-white/[0.02] border-white/5 text-gray-400 hover:border-red-500/30 hover:text-white"
+                                          )}
+                                        >
+                                          {tipo}
+                                          <div className={cn("w-2 h-2 rounded-full", disciplinaryType === tipo ? "bg-red-500" : "bg-red-500/20")} />
+                                        </button>
+                                      ))}
+                                    </div>
+                                  </div>
+                                  <div>
+                                    <label className="text-[9px] font-bold text-gray-500 uppercase tracking-widest block mb-2">Descrição do Fato</label>
+                                    <textarea 
+                                      className="w-full bg-black/20 border border-white/5 rounded-xl p-4 text-xs font-medium text-white focus:outline-none min-h-[150px] resize-none"
+                                      placeholder="Descreva detalhadamente o motivo da medida..."
+                                    />
+                                  </div>
+                                  <button className="w-full py-4 rounded-xl bg-red-600/80 text-white text-[10px] font-bold uppercase tracking-widest hover:bg-red-600 transition-all">
+                                    Aplicar Medida
+                                  </button>
+                               </div>
+                            </div>
+                            <div className="bg-white/[0.02] border border-white/5 rounded-3xl p-8">
+                               <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-6">Histórico Disciplinar</h3>
+                               <div className="h-[300px] flex flex-col items-center justify-center opacity-10">
+                                  <ShieldAlert size={48} className="mb-4" />
+                                  <p className="text-[10px] font-bold uppercase tracking-widest">Nenhuma ocorrência</p>
+                               </div>
+                            </div>
+                         </div>
+                      </motion.div>
+                    )}
+
+                    {activeModalTab === "habilidades" && (
+                      <motion.div
+                        key="habilidades"
+                        initial={{ opacity: 0, scale: 0.98 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.98 }}
+                        className="space-y-6"
+                      >
+                         <div className="bg-white/[0.02] border border-white/5 rounded-3xl p-8">
+                            <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-6">Mapeamento de Competências</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                              {loadingSkills ? (
+                                <div className="col-span-full py-12 flex justify-center">
+                                  <Loader2 className="animate-spin text-blue-500" size={24} />
+                                </div>
+                              ) : (
+                                PREDEFINED_SKILLS.map((skill) => {
+                                  const Icon = skill.icon;
+                                  const existing = skills.find(s => s.name === skill.name);
+                                  const isActive = existing?.status === 'ativo';
+                                  
+                                  return (
+                                    <div 
+                                      key={skill.name}
+                                      onClick={() => handleToggleSkill(skill.name)}
+                                      className={cn(
+                                        "p-6 rounded-2xl border transition-all cursor-pointer relative overflow-hidden group",
+                                        isActive 
+                                          ? "bg-blue-600/10 border-blue-500/30" 
+                                          : "bg-white/[0.02] border-white/5 hover:border-white/10"
+                                      )}
+                                    >
+                                      {isActive && (
+                                        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-transparent pointer-events-none" />
+                                      )}
+                                      <div className="flex items-start justify-between relative z-10">
+                                        <div className="space-y-4">
+                                          <div className={cn(
+                                            "w-10 h-10 rounded-xl flex items-center justify-center transition-all",
+                                            isActive ? "bg-blue-500/20 text-blue-400" : "bg-black/20 text-gray-500"
+                                          )}>
+                                            <Icon size={20} />
+                                          </div>
+                                          <div>
+                                            <h4 className={cn("text-xs font-bold uppercase tracking-widest mb-1 transition-all", isActive ? "text-white" : "text-gray-400")}>
+                                              {skill.name}
+                                            </h4>
+                                            <p className="text-[9px] font-bold text-gray-600 uppercase tracking-widest">{skill.type}</p>
+                                          </div>
+                                        </div>
+                                        <div className={cn(
+                                          "w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all",
+                                          isActive ? "border-blue-500 bg-blue-500" : "border-white/10 bg-black/20"
+                                        )}>
+                                          {isActive && <Check size={10} className="text-white" />}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  );
+                                })
+                              )}
+                            </div>
+                         </div>
+                      </motion.div>
+                    )}
+
+                    {activeModalTab === "observacoes" && (
+                      <motion.div
+                        key="observacoes"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="h-full"
+                      >
+                        <ObservationManager employeeId={selectedProfile.employee_id} />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+    </div>
+  );
+}
+
+function seniority(hireDate: string) {
+  if (!hireDate) return "N/A";
+  const start = new Date(hireDate);
+  const now = new Date();
+  
+  let months = (now.getFullYear() - start.getFullYear()) * 12 + now.getMonth() - start.getMonth();
+  const days = now.getDate() - start.getDate();
+  if (days < 0) months -= 1;
+
+  if (months < 1) return "Recém-admitido";
+  if (months < 12) return `${months} ${months === 1 ? 'mês' : 'meses'}`;
+  
+  const years = Math.floor(months / 12);
+  const remMonths = months % 12;
+  
+  return remMonths === 0 
+    ? `${years} ${years === 1 ? 'ano' : 'anos'}` 
+    : `${years}a ${remMonths}m`;
+}
