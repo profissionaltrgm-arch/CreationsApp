@@ -91,12 +91,16 @@ export default function EmployeesPage() {
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
+  const [editingProfile, setEditingProfile] = useState(false);
+  const [editForm, setEditForm] = useState<Partial<Employee>>({});
   const [error, setError] = useState("");
   const [disciplinaryType, setDisciplinaryType] = useState("ADVERTÊNCIA VERBAL");
   const [absenceHistory, setAbsenceHistory] = useState<any[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [skills, setSkills] = useState<any[]>([]);
   const [loadingSkills, setLoadingSkills] = useState(false);
+
+  
 
   const PREDEFINED_SKILLS = [
     { name: "Transpaleteira", type: "Carteira / Habilitação", icon: Truck },
@@ -193,6 +197,59 @@ export default function EmployeesPage() {
     } finally {
       setSaving(false);
     }
+  }
+
+
+    async function handleConfirmAbsence() {
+    if (!selectedProfile) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from('absences')
+        .insert([{
+          employee_id: selectedProfile.employee_id,
+          // ✅ ALTERADO: usa absenceDate em vez de new Date()
+          date: absenceDate,
+          type: selectedClassification,
+          reason: selectedRootCause === 'Outros' ? otherReason : selectedRootCause,
+          treatment: selectedTreatment,
+          observation: absenceObservation,
+        }]);
+
+      if (error) {
+        console.error("Erro ao salvar ausência:", error);
+        alert("Erro ao salvar registro: " + error.message);
+        return;
+      }
+      
+      setAbsenceObservation("");
+      setOtherReason("");
+      // ✅ NOVO: reseta a data para hoje após salvar
+      setAbsenceDate(new Date().toISOString().split("T")[0]);
+      alert("Registro de ausência confirmado com sucesso!");
+    } catch (err: any) {
+      console.error(err);
+      alert("Erro ao salvar: " + err.message);
+    } finally {
+      setSaving(false);
+    }
+    async function handleSaveProfile() {
+  if (!selectedProfile) return;
+  setSaving(true);
+  const { error } = await supabase
+    .from('employees')
+    .update(editForm)
+    .eq('employee_id', selectedProfile.employee_id);
+  
+  if (!error) {
+    setSelectedProfile({ ...selectedProfile, ...editForm });
+    setEmployees(prev => prev.map(e => 
+      e.employee_id === selectedProfile.employee_id ? { ...e, ...editForm } : e
+    ));
+    setEditingProfile(false);
+  }
+  setSaving(false);
+}
   }
 
   useEffect(() => { fetchEmployees(); }, []);
@@ -902,9 +959,24 @@ export default function EmployeesPage() {
                   </div>
 
                   <div className="flex items-center gap-3">
-                    <button className="p-3 rounded-xl bg-white/5 border border-white/5 text-gray-400 hover:text-white transition-all">
-                       <Settings size={18} />
-                    </button>
+                   <button 
+  onClick={() => {
+    setEditingProfile(true);
+    setEditForm({
+      name: selectedProfile.name,
+      job_title: selectedProfile.job_title,
+      company: selectedProfile.company,
+      Shift: selectedProfile.Shift,
+      status: selectedProfile.status,
+      sector: selectedProfile.sector,
+      process: selectedProfile.process,
+      class: selectedProfile.class,
+    });
+  }}
+  className="p-3 rounded-xl bg-white/5 border border-white/5 text-gray-400 hover:text-white transition-all"
+>
+  <Settings size={18} />
+</button>
                     <button 
                       onClick={() => setSelectedProfile(null)}
                       className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 hover:bg-red-500 hover:text-white transition-all"
@@ -1314,6 +1386,96 @@ export default function EmployeesPage() {
                     )}
                   </AnimatePresence>
                 </div>
+                {editingProfile && (
+  <div className="absolute inset-0 z-20 bg-[#050B1D]/80 backdrop-blur-md flex items-center justify-center p-8">
+    <div className="bg-[#0D1528] border border-white/10 rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden">
+      <div className="px-8 py-6 border-b border-white/10 flex items-center justify-between">
+        <h3 className="text-white font-bold uppercase tracking-widest text-sm">Editar Colaborador</h3>
+        <button onClick={() => setEditingProfile(false)} className="p-2 hover:bg-white/5 rounded-xl text-gray-500">
+          <X size={18} />
+        </button>
+      </div>
+      <div className="p-8 space-y-5 max-h-[70vh] overflow-y-auto custom-scrollbar">
+        {[
+          { label: "Nome Completo", key: "name" },
+          { label: "Cargo", key: "job_title" },
+          { label: "Setor", key: "sector" },
+          { label: "Processo", key: "process" },
+          { label: "Classe", key: "class" },
+        ].map(field => (
+          <div key={field.key} className="space-y-1.5">
+            <label className="text-[9px] font-bold text-gray-500 uppercase tracking-widest">{field.label}</label>
+            <input
+              value={(editForm as any)[field.key] || ""}
+              onChange={e => setEditForm({ ...editForm, [field.key]: e.target.value })}
+              className="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-3 text-xs font-bold text-white uppercase focus:outline-none focus:border-blue-500/50 transition-all"
+            />
+          </div>
+        ))}
+
+        <div className="space-y-2">
+          <label className="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Turno</label>
+          <div className="grid grid-cols-4 gap-2">
+            {SHIFTS.map(s => (
+              <button key={s.key} type="button" onClick={() => setEditForm({ ...editForm, Shift: s.key })}
+                className={cn("py-2 rounded-xl border text-[10px] font-bold flex flex-col items-center gap-1 transition-all",
+                  editForm.Shift === s.key ? "bg-blue-600/20 border-blue-600 text-blue-400" : "bg-white/[0.02] border-white/10 text-gray-500"
+                )}>
+                <s.icon size={12} />{s.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Empresa</label>
+          <div className="grid grid-cols-2 gap-2">
+            {["MONDIAL", "NUTRIVIDA"].map(c => (
+              <button key={c} type="button" onClick={() => setEditForm({ ...editForm, company: c })}
+                className={cn("py-3 rounded-xl border text-[10px] font-bold transition-all",
+                  editForm.company === c
+                    ? c === "NUTRIVIDA" ? "bg-purple-600/20 border-purple-600 text-purple-400" : "bg-blue-600/20 border-blue-600 text-blue-400"
+                    : "bg-white/[0.02] border-white/10 text-gray-500"
+                )}>
+                {c}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Status</label>
+          <div className="grid grid-cols-4 gap-2">
+            {["Ativo", "Inativo", "Afastado", "Desligado"].map(s => (
+              <button key={s} type="button" onClick={() => setEditForm({ ...editForm, status: s })}
+                className={cn("py-2.5 rounded-xl border text-[9px] font-bold transition-all",
+                  editForm.status === s
+                    ? s === "Ativo" ? "bg-emerald-600/20 border-emerald-600 text-emerald-400"
+                    : s === "Inativo" ? "bg-red-600/20 border-red-600 text-red-400"
+                    : "bg-gray-600/20 border-gray-600 text-gray-400"
+                    : "bg-white/[0.02] border-white/10 text-gray-500"
+                )}>
+                {s}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="pt-4 flex gap-4">
+          <button onClick={() => setEditingProfile(false)}
+            className="flex-1 py-3.5 rounded-xl border border-white/10 text-[11px] font-bold text-gray-500 hover:bg-white/5 uppercase tracking-widest transition-all">
+            Cancelar
+          </button>
+          <button onClick={handleSaveProfile} disabled={saving}
+            className="flex-[1.5] bg-blue-600 hover:bg-blue-500 text-white py-3.5 rounded-xl text-[11px] font-black uppercase tracking-widest flex items-center justify-center gap-2 disabled:opacity-50 transition-all">
+            {saving ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} strokeWidth={3} />}
+            Salvar Alterações
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
               </motion.div>
             </div>
           )}
