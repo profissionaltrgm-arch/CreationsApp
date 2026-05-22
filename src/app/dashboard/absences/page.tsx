@@ -71,9 +71,9 @@ export default function GlobalAbsencesPage() {
   }, [absences, searchTerm, filterType, unitFilter]);
 
   const formatDate = (d: string) => {
-    const date = new Date(d);
-    return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
-  };
+  const [year, month, day] = d.split('-');
+  return `${day}/${month}`;
+};
 
   return (
     <div className="h-full flex flex-col space-y-4 animate-in fade-in duration-500 overflow-hidden">
