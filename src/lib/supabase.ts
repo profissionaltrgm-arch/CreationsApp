@@ -4,3 +4,9 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://pvclnwklali
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "sb_publishable_FF9KXFPYBy5yDp8ph2JQpQ_lIRQfUhi";
 
 export const supabase = createClient(supabaseUrl, supabaseKey);
+
+// Client for Avarias database containing product descriptions
+const avariasUrl = "https://bvgwlkdqmkuuhqiwzfti.supabase.co";
+const avariasKey = "sb_publishable_sSplcLDY1MoxxlEVTKHUpg_piJhjjAS";
+export const supabaseAvarias = createClient(avariasUrl, avariasKey);
+
