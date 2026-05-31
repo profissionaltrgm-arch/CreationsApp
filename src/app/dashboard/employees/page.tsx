@@ -198,59 +198,27 @@ export default function EmployeesPage() {
       setSaving(false);
     }
   }
-
-
-    async function handleConfirmAbsence() {
+  async function handleSaveProfile() {
     if (!selectedProfile) return;
     setSaving(true);
-    try {
-      const { error } = await supabase
-        .from('absences')
-        .insert([{
-          employee_id: selectedProfile.employee_id,
-          // ✅ ALTERADO: usa absenceDate em vez de new Date()
-          date: absenceDate,
-          type: selectedClassification,
-          reason: selectedRootCause === 'Outros' ? otherReason : selectedRootCause,
-          treatment: selectedTreatment,
-          observation: absenceObservation,
-        }]);
-
-      if (error) {
-        console.error("Erro ao salvar ausência:", error);
-        alert("Erro ao salvar registro: " + error.message);
-        return;
-      }
-      
-      setAbsenceObservation("");
-      setOtherReason("");
-      // ✅ NOVO: reseta a data para hoje após salvar
-      setAbsenceDate(new Date().toISOString().split("T")[0]);
-      alert("Registro de ausência confirmado com sucesso!");
-    } catch (err: any) {
-      console.error(err);
-      alert("Erro ao salvar: " + err.message);
-    } finally {
-      setSaving(false);
+    const { error } = await supabase
+      .from('employees')
+      .update(editForm)
+      .eq('employee_id', selectedProfile.employee_id);
+    
+    if (!error) {
+      setSelectedProfile({ ...selectedProfile, ...editForm } as Employee);
+      setEmployees(prev => prev.map(e => 
+        e.employee_id === selectedProfile.employee_id ? { ...e, ...editForm } as Employee : e
+      ));
+      setEditingProfile(false);
+    } else {
+      console.error("Erro ao salvar perfil:", error);
+      alert("Erro ao salvar alterações: " + error.message);
     }
-    async function handleSaveProfile() {
-  if (!selectedProfile) return;
-  setSaving(true);
-  const { error } = await supabase
-    .from('employees')
-    .update(editForm)
-    .eq('employee_id', selectedProfile.employee_id);
-  
-  if (!error) {
-    setSelectedProfile({ ...selectedProfile, ...editForm });
-    setEmployees(prev => prev.map(e => 
-      e.employee_id === selectedProfile.employee_id ? { ...e, ...editForm } : e
-    ));
-    setEditingProfile(false);
+    setSaving(false);
   }
-  setSaving(false);
-}
-  }
+
 
   useEffect(() => { fetchEmployees(); }, []);
 

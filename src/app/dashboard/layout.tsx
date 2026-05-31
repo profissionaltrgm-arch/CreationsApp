@@ -36,7 +36,7 @@ export default function DashboardLayout({
     { label: "Planejamento",  icon: CalendarDays,     href: "/dashboard/planning" },
     { label: "Ausências",     icon: Calendar,         href: "/dashboard/absences" },
     { label: "Processos",     icon: Zap,              href: "/dashboard/processes" },
-    { label: "Val. Picking",  icon: PackageSearch,    href: "/dashboard/picking" },
+    { label: "Validações",    icon: ShieldCheck,      href: "/dashboard/validacoes" },
   ];
 
   return (
@@ -47,14 +47,14 @@ export default function DashboardLayout({
         onMouseLeave={() => setIsHovered(false)}
         className={cn(
           "fixed inset-y-0 left-0 z-50 flex flex-col transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] border-r border-white/5 shadow-[20px_0_40px_rgba(0,0,0,0.4)] overflow-hidden",
-          isHovered ? "w-64" : "w-[72px]"
+          isHovered ? "w-60" : "w-[52px]"
         )}
         style={{
           background: "linear-gradient(180deg, #05070A 0%, #080B10 100%)",
         }}
       >
         {/* Logo Section */}
-        <div className="flex items-center gap-4 px-5 h-20 shrink-0">
+        <div className="flex items-center gap-4 px-3 h-16 shrink-0">
           <div
             className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 shadow-[0_0_15px_rgba(59,130,246,0.3)] bg-blue-600 transition-transform duration-500 rotate-0 group-hover:rotate-12"
           >
@@ -81,7 +81,7 @@ export default function DashboardLayout({
                   isActive ? "bg-white/[0.06] shadow-xl" : "hover:bg-white/[0.03]"
                 )}
               >
-                <div className="w-[48px] shrink-0 flex items-center justify-center">
+                <div className="w-[52px] shrink-0 flex items-center justify-center">
                    <item.icon size={20} className={cn(
                      "transition-all duration-300",
                      isActive ? "text-blue-500 drop-shadow-[0_0_8px_rgba(59,130,246,0.5)]" : "text-gray-500 group-hover:text-white"
@@ -112,7 +112,7 @@ export default function DashboardLayout({
             onClick={() => router.push("/login")}
             className="w-full flex items-center h-12 rounded-2xl transition-all hover:bg-red-500/10 group overflow-hidden text-gray-500"
            >
-            <div className="w-[44px] shrink-0 flex items-center justify-center">
+            <div className="w-[52px] shrink-0 flex items-center justify-center">
                <LogOut size={18} className="group-hover:text-red-500 transition-colors" />
             </div>
             <span
@@ -130,7 +130,7 @@ export default function DashboardLayout({
       {/* Main Content Area */}
       <div className={cn(
         "flex-1 flex flex-col min-w-0 transition-all duration-500",
-        "pl-[72px]"
+        "pl-[52px]"
       )}>
         {/* Header Superior Premium */}
         <header

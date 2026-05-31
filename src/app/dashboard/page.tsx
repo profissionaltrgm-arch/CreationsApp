@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
-import { Users, User, Calendar, Zap, TrendingUp, PieChart, ShieldCheck, Activity } from "lucide-react";
+import { Users, Calendar, TrendingUp, PieChart, Activity } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
@@ -73,7 +73,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Cards de Estatísticas High-End */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 px-1">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 px-1">
         <StatCard
           label="Colaboradores Ativos"
           value={loading ? "..." : stats.active}
@@ -91,18 +91,10 @@ export default function DashboardPage() {
           trend="-0.8%"
           color="red"
         />
-        <StatCard
-          label="Matriz de Skills"
-          value={loading ? "..." : stats.topSkills.length}
-          sub="COMPETÊNCIAS MAPEADAS"
-          icon={Zap}
-          trend="READY"
-          color="emerald"
-        />
       </div>
 
       {/* Composição Demográfica Premium */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 px-1 flex-1 min-h-0">
+      <div className="grid grid-cols-1 gap-6 px-1 flex-1 min-h-0">
         <div className="bg-[#0D1528] border border-white/5 rounded-[2.5rem] p-8 relative overflow-hidden flex flex-col group transition-all hover:border-white/10 shadow-2xl">
            {/* Background Decoration */}
            <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 blur-[100px] -mr-32 -mt-32 rounded-full pointer-events-none" />
@@ -118,31 +110,6 @@ export default function DashboardPage() {
            <div className="space-y-8 relative z-10 flex-1 flex flex-col justify-center">
               <GenderBar label="Mulheres" count={stats.women} total={stats.total} color="bg-blue-500" glow="shadow-[0_0_15px_rgba(59,130,246,0.3)]" />
               <GenderBar label="Homens"   count={stats.men}   total={stats.total} color="bg-emerald-500" glow="shadow-[0_0_15px_rgba(16,185,129,0.3)]" />
-           </div>
-        </div>
-
-        <div className="bg-[#0D1528] border border-white/5 rounded-[2.5rem] p-8 flex flex-col justify-between group hover:border-white/10 transition-all shadow-2xl overflow-hidden relative">
-           <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 blur-[100px] -mr-32 -mt-32 rounded-full pointer-events-none" />
-           
-           <div className="relative z-10">
-              <div className="w-10 h-10 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-4">
-                 <ShieldCheck className="text-emerald-500" size={20} />
-              </div>
-              <h2 className="text-xl font-bold text-white tracking-tight leading-tight">Sistema Integrado <br/> de Performance</h2>
-              <p className="text-[10px] text-gray-500 font-black uppercase tracking-[0.2em] mt-3">Ready for Operational Tasks</p>
-           </div>
-
-           <div className="relative z-10 pt-8 mt-auto">
-              <div className="flex items-center gap-4 text-gray-400">
-                 <div className="flex -space-x-2">
-                    {[1,2,3,4].map(i => (
-                      <div key={i} className="w-8 h-8 rounded-full border-2 border-[#0D1528] bg-gray-800 flex items-center justify-center overflow-hidden">
-                         <User size={14} className="text-gray-600" />
-                      </div>
-                    ))}
-                 </div>
-                 <span className="text-[10px] font-bold uppercase tracking-widest text-gray-600">Equipe Técnica Conectada</span>
-              </div>
            </div>
         </div>
       </div>
