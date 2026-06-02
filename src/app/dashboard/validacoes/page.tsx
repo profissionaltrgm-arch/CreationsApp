@@ -5,8 +5,9 @@ import { supabase, supabaseAvarias } from "@/lib/supabase";
 import {
   ArrowLeft, ScanBarcode, AlertTriangle, CheckCircle2, Plus,
   ChevronRight, X, Trash2, Save, Loader2,
-  Building2, Percent, ShieldAlert
-} from "lucide-react";
+  Building2, Percent, ShieldAlert;
+  ,Pencil
+}  from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 
@@ -66,6 +67,8 @@ interface DraftDivergence {
   system_qty: string;
   physical_qty: string;
 }
+
+const [editingGroup, setEditingGroup] = useState<WeekGroup | null>(null);
 
 function fmtDate(d: string) {
   return new Date(d + "T12:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
@@ -279,6 +282,12 @@ function NovaValidacaoModal({ onClose, onSaved, descMap }: { onClose: () => void
                     <input type="number" value={row.system_qty} placeholder="0" onChange={e => updateRow(row.key, "system_qty", e.target.value)} className={cn(field, "text-[12px] px-2 py-1.5 rounded-xl text-center font-mono")} />
                     <input type="number" value={row.physical_qty} placeholder="0" onChange={e => updateRow(row.key, "physical_qty", e.target.value)} className={cn(field, "text-[12px] px-2 py-1.5 rounded-xl text-center font-mono")} />
                     <div className="flex justify-end">
+                      <button
+  onClick={e => { e.stopPropagation(); setEditingGroup(v); }}
+  className="p-2 rounded-xl text-white/10 hover:text-amber-400 hover:bg-amber-500/10 transition-all"
+>
+  <Pencil size={13} />
+</button>
                       <button onClick={() => removeRow(row.key)} className="flex items-center justify-center w-8 h-8 rounded-xl text-white/20 hover:text-red-400 hover:bg-red-500/10 transition-all">
                         <Trash2 size={14} />
                       </button>
@@ -872,6 +881,15 @@ export default function ValidacoesPage() {
   return (
     <>
       {showModal && <NovaValidacaoModal onClose={() => setShowModal(false)} onSaved={fetchValidations} descMap={descMap} />}
+
+      {editingGroup && (
+  <EditarValidacaoModal
+    group={editingGroup}
+    onClose={() => setEditingGroup(null)}
+    onSaved={fetchValidations}
+    descMap={descMap}
+  />
+)}
 
       <div className="min-h-full">
         <div className="w-full max-w-full px-6 md:px-10 lg:px-14 py-8 mx-auto space-y-6">
