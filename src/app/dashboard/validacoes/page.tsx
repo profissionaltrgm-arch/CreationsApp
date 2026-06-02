@@ -321,6 +321,275 @@ function NovaValidacaoModal({ onClose, onSaved, descMap }: { onClose: () => void
   );
 }
 
+// ─── Editar Validação Modal ────────────────────────────────────────────────────
+function EditarValidacaoModal({ group, onClose, onSaved, descMap }: {
+  group: WeekGroup;
+  onClose: () => void;
+  onSaved: () => void;
+  descMap: Record<string, string>;
+}) {
+  const agSession = group.sessions.find(s => s.company === "AG");
+  const brSession = group.sessions.find(s => s.company === "BR");
+
+  const [weekNumber, setWeekNumber] = useState(group.week_number.toString());
+  const [year, setYear] = useState(group.year.toString());
+  const [weekStart, setWeekStart] = useState(group.week_start);
+  const [weekEnd, setWeekEnd] = useState(group.week_end);
+  const [notes, setNotes] = useState(group.notes ?? "");
+  const [validatedCountAg, setValidatedCountAg] = useState((agSession?.validated_count ?? "").toString());
+  const [validatedCountBr, setValidatedCountBr] = useState((brSession?.validated_count ?? "").toString());
+  const [rows, setRows] = useState<DraftDivergence[]>(
+    group.divergences.map((d, i) => ({
+      key: i + 1,
+      record_date: d.session_date ?? group.week_start,
+      position: d.position,
+      company: d.company,
+      code: d.code,
+      description: d.description ?? "",
+      system_qty: d.system_qty.toString(),
+      physical_qty: d.physical_qty.toString(),
+    }))
+  );
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [keyCounter, setKeyCounter] = useState(group.divergences.length + 1);
+
+  useEffect(() => {
+    if (weekStart) {
+      setWeekNumber(getWeekNumber(weekStart).toString());
+      setYear(weekStart.split("-")[0]);
+    }
+  }, [weekStart]);
+
+  function addRow() {
+    const today = new Date().toISOString().split("T")[0];
+    setRows(r => [...r, { key: keyCounter, record_date: today, position: "", company: "AG", code: "", description: "", system_qty: "", physical_qty: "" }]);
+    setKeyCounter(k => k + 1);
+  }
+  function removeRow(key: number) { setRows(r => r.filter(x => x.key !== key)); }
+  function updateRow(key: number, field: keyof DraftDivergence, value: string) {
+    setRows(r => r.map(x => x.key === key ? { ...x, [field]: value } : x));
+  }
+
+  async function handleSave() {
+    if (!weekStart || !weekEnd) { setError("Preencha data início e fim."); return; }
+    const countAg = parseInt(validatedCountAg) || 0;
+    const countBr = parseInt(validatedCountBr) || 0;
+    if (countAg === 0 && countBr === 0) { setError("Informe posições validadas para ao menos uma empresa."); return; }
+    if (rows.some(r => !r.position || !r.code)) { setError("Preencha Posição e Código para todas as divergências."); return; }
+
+    setSaving(true); setError("");
+    try {
+      // 1. Atualiza ou cria sessões
+      let sessionAgId: string | null = agSession?.id ?? null;
+      let sessionBrId: string | null = brSession?.id ?? null;
+
+      const basePayload = {
+        week_number: parseInt(weekNumber),
+        year: parseInt(year),
+        week_start: weekStart,
+        week_end: weekEnd,
+        notes: notes || null,
+      };
+
+      if (agSession) {
+        const { error: e } = await supabase.from("validation_sessions")
+          .update({ ...basePayload, validated_count: countAg })
+          .eq("id", agSession.id);
+        if (e) throw new Error(`Erro update AG: ${e.message}`);
+      } else if (countAg > 0 || rows.some(r => r.company === "AG")) {
+        const { data, error: e } = await supabase.from("validation_sessions")
+          .insert({ ...basePayload, session_date: weekStart, company: "AG", type: group.type, validated_count: countAg })
+          .select().single();
+        if (e || !data) throw new Error(`Erro sessão AG: ${e?.message}`);
+        sessionAgId = data.id;
+      }
+
+      if (brSession) {
+        const { error: e } = await supabase.from("validation_sessions")
+          .update({ ...basePayload, validated_count: countBr })
+          .eq("id", brSession.id);
+        if (e) throw new Error(`Erro update BR: ${e.message}`);
+      } else if (countBr > 0 || rows.some(r => r.company === "BR")) {
+        const { data, error: e } = await supabase.from("validation_sessions")
+          .insert({ ...basePayload, session_date: weekStart, company: "BR", type: group.type, validated_count: countBr })
+          .select().single();
+        if (e || !data) throw new Error(`Erro sessão BR: ${e?.message}`);
+        sessionBrId = data.id;
+      }
+
+      // 2. Apaga divergências antigas e reinsere
+      const sessionIds = group.sessions.map(s => s.id);
+      if (sessionIds.length > 0) {
+        const { error: delErr } = await supabase.from("divergences").delete().in("session_id", sessionIds);
+        if (delErr) throw new Error(`Erro delete divergências: ${delErr.message}`);
+      }
+
+      if (rows.length > 0) {
+        const toInsert = rows.map(r => {
+          const sId = r.company === "AG" ? sessionAgId : sessionBrId;
+          if (!sId) throw new Error(`Divergência ${r.company} sem sessão correspondente.`);
+          return {
+            session_id: sId,
+            session_date: r.record_date,
+            position: r.position.toUpperCase().trim(),
+            company: r.company,
+            code: r.code.trim(),
+            description: r.description.trim() || null,
+            system_qty: parseInt(r.system_qty) || 0,
+            physical_qty: parseInt(r.physical_qty) || 0,
+            type: group.type,
+          };
+        });
+        const { error: insErr } = await supabase.from("divergences").insert(toInsert);
+        if (insErr) throw new Error(`Erro inserir divergências: ${insErr.message}`);
+      }
+
+      onSaved(); onClose();
+    } catch (err: unknown) {
+      setError((err as Error).message || "Erro desconhecido.");
+    } finally { setSaving(false); }
+  }
+
+  const field = "w-full bg-[#121622] border border-white/5 rounded-2xl px-4 py-3 text-[13px] text-white/90 outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all placeholder:text-white/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none";
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-start justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto">
+      <div className="bg-[#0A0D14] border border-white/10 rounded-[28px] w-full max-w-5xl my-8 shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
+        {/* Header */}
+        <div className="flex items-center justify-between px-8 py-6 border-b border-white/5 bg-[#07090F]">
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
+              <Pencil size={18} className="text-amber-400" />
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-white uppercase tracking-wider">Editar Validação — Semana {group.week_number}</h3>
+              <p className="text-[11px] text-white/40 mt-0.5 font-medium tracking-wide">Tipo: <span className="text-amber-400/80 font-bold uppercase">{group.type}</span> · Alterações substituem os dados anteriores</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-2 rounded-xl text-white/30 hover:text-white/85 hover:bg-white/5 transition-colors"><X size={18} /></button>
+        </div>
+
+        <div className="p-8 space-y-6">
+          {/* Período */}
+          <div>
+            <span className="text-[10px] font-bold text-amber-500/80 uppercase tracking-widest block mb-3">Informações do Período</span>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {[
+                { label: "Nº Semana", value: weekNumber, set: setWeekNumber, type: "number" },
+                { label: "Ano", value: year, set: setYear, type: "number" },
+                { label: "Data Início", value: weekStart, set: setWeekStart, type: "date" },
+                { label: "Data Fim", value: weekEnd, set: setWeekEnd, type: "date" },
+              ].map(f => (
+                <div key={f.label}>
+                  <label className="block text-[10px] font-semibold uppercase tracking-wider text-white/40 mb-2">{f.label}</label>
+                  <input type={f.type} value={f.value} onChange={e => f.set(e.target.value)} className={field} />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Observações */}
+          <div>
+            <label className="block text-[10px] font-semibold uppercase tracking-wider text-white/40 mb-2">Observações (opcional)</label>
+            <input type="text" value={notes} onChange={e => setNotes(e.target.value)} placeholder="Ex: Contagem nas prateleiras da AG" className={field} />
+          </div>
+
+          {/* Posições Auditadas */}
+          <div className="bg-[#0E121C] border border-white/5 rounded-2xl p-5">
+            <div className="flex items-center gap-2 mb-4">
+              <Building2 size={14} className="text-white/30" />
+              <span className="text-[11px] font-bold text-white/60 uppercase tracking-widest">Posições Auditadas</span>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-[10px] font-semibold uppercase tracking-wider text-emerald-400/80 mb-2">Total AG</label>
+                <input type="number" value={validatedCountAg} onChange={e => setValidatedCountAg(e.target.value)} className={cn(field, "border-emerald-500/10 focus:border-emerald-500/30 text-emerald-300 font-semibold")} />
+              </div>
+              <div>
+                <label className="block text-[10px] font-semibold uppercase tracking-wider text-blue-400/80 mb-2">Total BR</label>
+                <input type="number" value={validatedCountBr} onChange={e => setValidatedCountBr(e.target.value)} className={cn(field, "border-blue-500/10 focus:border-blue-500/30 text-blue-300 font-semibold")} />
+              </div>
+            </div>
+          </div>
+
+          {/* Divergências */}
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <AlertTriangle size={14} className="text-amber-400" />
+                <span className="text-[11px] font-bold text-white/70 uppercase tracking-widest">Divergências</span>
+              </div>
+              <span className="text-[11px] text-white/30 font-bold bg-white/5 px-2.5 py-1 rounded-full">{rows.length} registro{rows.length !== 1 ? "s" : ""}</span>
+            </div>
+
+            <div className="border border-white/5 rounded-2xl overflow-hidden bg-[#07090F]">
+              <div className="grid bg-[#0E121C] border-b border-white/5 px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-white/30"
+                style={{ gridTemplateColumns: "115px 125px 85px 105px 1fr 75px 75px 44px" }}>
+                {["Data", "Posição", "Empresa", "Código", "Descrição", "Sistema", "Físico", ""].map(h => (
+                  <span key={h} className={cn((h === "Sistema" || h === "Físico") && "text-center")}>{h}</span>
+                ))}
+              </div>
+
+              <div className="max-h-60 overflow-y-auto custom-scrollbar divide-y divide-white/[0.03]">
+                {rows.map(row => (
+                  <div key={row.key} className="grid items-center px-4 py-3 hover:bg-white/[0.01] gap-2"
+                    style={{ gridTemplateColumns: "115px 125px 85px 105px 1fr 75px 75px 44px" }}>
+                    <input type="date" value={row.record_date} onChange={e => updateRow(row.key, "record_date", e.target.value)} className={cn(field, "text-[12px] px-2 py-1.5 rounded-xl")} />
+                    <input type="text" value={row.position} onChange={e => updateRow(row.key, "position", e.target.value)} className={cn(field, "text-[12px] px-2 py-1.5 rounded-xl font-mono uppercase text-white/80")} />
+                    <select value={row.company} onChange={e => updateRow(row.key, "company", e.target.value as Company)} className={cn(field, "text-[12px] px-2 py-1.5 rounded-xl")}>
+                      <option value="AG">AG</option>
+                      <option value="BR">BR</option>
+                    </select>
+                    <input type="text" value={row.code} onChange={e => {
+                      const code = e.target.value;
+                      updateRow(row.key, "code", code);
+                      const clean = code.trim().toUpperCase();
+                      if (descMap[clean]) updateRow(row.key, "description", descMap[clean]);
+                    }} className={cn(field, "text-[12px] px-2 py-1.5 rounded-xl font-mono text-white/80")} />
+                    <input type="text" value={row.description} onChange={e => updateRow(row.key, "description", e.target.value)} className={cn(field, "text-[12px] px-2 py-1.5 rounded-xl text-white/80")} />
+                    <input type="number" value={row.system_qty} onChange={e => updateRow(row.key, "system_qty", e.target.value)} className={cn(field, "text-[12px] px-2 py-1.5 rounded-xl text-center font-mono")} />
+                    <input type="number" value={row.physical_qty} onChange={e => updateRow(row.key, "physical_qty", e.target.value)} className={cn(field, "text-[12px] px-2 py-1.5 rounded-xl text-center font-mono")} />
+                    <div className="flex justify-end">
+                      <button onClick={() => removeRow(row.key)} className="flex items-center justify-center w-8 h-8 rounded-xl text-white/20 hover:text-red-400 hover:bg-red-500/10 transition-all">
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                {rows.length === 0 && (
+                  <div className="py-12 text-center text-[12px] text-white/20 flex flex-col items-center gap-3">
+                    <CheckCircle2 size={24} className="text-emerald-500/30" />
+                    <p className="font-bold text-white/40 uppercase tracking-widest text-[10px]">Nenhuma divergência</p>
+                  </div>
+                )}
+              </div>
+
+              <button onClick={addRow} className="w-full flex items-center justify-center gap-2 py-3.5 text-[11px] font-bold uppercase tracking-wider text-white/35 hover:text-amber-400 hover:bg-amber-500/5 transition-all border-t border-white/5">
+                <Plus size={14} /> Adicionar Divergência
+              </button>
+            </div>
+          </div>
+
+          {error && <p className="text-red-400 text-[12px] font-bold bg-red-500/8 border border-red-500/15 rounded-2xl px-5 py-4">{error}</p>}
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-between px-8 py-6 border-t border-white/5 bg-[#07090F]">
+          <span className="text-[11px] font-bold text-white/30 uppercase tracking-widest">{rows.length} divergências</span>
+          <div className="flex gap-3">
+            <button onClick={onClose} className="px-5 py-2.5 rounded-xl text-[12px] font-bold uppercase tracking-wider text-white/40 hover:text-white/70 hover:bg-white/5 transition-all">Cancelar</button>
+            <button onClick={handleSave} disabled={saving} className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-[12px] font-bold uppercase tracking-wider transition-all disabled:opacity-50">
+              {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+              {saving ? "Salvando..." : "Salvar Alterações"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Detail View ──────────────────────────────────────────────────────────────
 function DetailView({ v, onBack, descMap }: { v: WeekGroup; onBack: () => void; descMap: Record<string, string> }) {
   const agSession = v.sessions.find(s => s.company === "AG");
