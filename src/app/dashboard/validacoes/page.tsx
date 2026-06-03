@@ -5,9 +5,8 @@ import { supabase, supabaseAvarias } from "@/lib/supabase";
 import {
   ArrowLeft, ScanBarcode, AlertTriangle, CheckCircle2, Plus,
   ChevronRight, X, Trash2, Save, Loader2,
-  Building2, Percent, ShieldAlert;
-  ,Pencil
-}  from "lucide-react";
+  Building2, Percent, ShieldAlert, Pencil
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 
@@ -67,8 +66,6 @@ interface DraftDivergence {
   system_qty: string;
   physical_qty: string;
 }
-
-const [editingGroup, setEditingGroup] = useState<WeekGroup | null>(null);
 
 function fmtDate(d: string) {
   return new Date(d + "T12:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
@@ -169,7 +166,6 @@ function NovaValidacaoModal({ onClose, onSaved, descMap }: { onClose: () => void
   return (
     <div className="fixed inset-0 z-[60] flex items-start justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto">
       <div className="bg-[#0A0D14] border border-white/10 rounded-[28px] w-full max-w-5xl my-8 shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
-        {/* Header */}
         <div className="flex items-center justify-between px-8 py-6 border-b border-white/5 bg-[#07090F]">
           <div className="flex items-center gap-4">
             <div className="w-10 h-10 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shadow-[0_0_15px_rgba(59,130,246,0.15)]">
@@ -184,7 +180,6 @@ function NovaValidacaoModal({ onClose, onSaved, descMap }: { onClose: () => void
         </div>
 
         <div className="p-8 space-y-6">
-          {/* Período */}
           <div>
             <span className="text-[10px] font-bold text-blue-500/80 uppercase tracking-widest block mb-3">Informações do Período</span>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -202,7 +197,6 @@ function NovaValidacaoModal({ onClose, onSaved, descMap }: { onClose: () => void
             </div>
           </div>
 
-          {/* Configurações */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-[10px] font-semibold uppercase tracking-wider text-white/40 mb-2">Tipo de Validação</label>
@@ -218,7 +212,6 @@ function NovaValidacaoModal({ onClose, onSaved, descMap }: { onClose: () => void
             </div>
           </div>
 
-          {/* Posições Auditadas */}
           <div className="bg-[#0E121C] border border-white/5 rounded-2xl p-5 shadow-inner">
             <div className="flex items-center gap-2 mb-4">
               <Building2 size={14} className="text-white/30" />
@@ -236,7 +229,6 @@ function NovaValidacaoModal({ onClose, onSaved, descMap }: { onClose: () => void
             </div>
           </div>
 
-          {/* Divergências */}
           <div>
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
@@ -282,12 +274,6 @@ function NovaValidacaoModal({ onClose, onSaved, descMap }: { onClose: () => void
                     <input type="number" value={row.system_qty} placeholder="0" onChange={e => updateRow(row.key, "system_qty", e.target.value)} className={cn(field, "text-[12px] px-2 py-1.5 rounded-xl text-center font-mono")} />
                     <input type="number" value={row.physical_qty} placeholder="0" onChange={e => updateRow(row.key, "physical_qty", e.target.value)} className={cn(field, "text-[12px] px-2 py-1.5 rounded-xl text-center font-mono")} />
                     <div className="flex justify-end">
-                      <button
-  onClick={e => { e.stopPropagation(); setEditingGroup(v); }}
-  className="p-2 rounded-xl text-white/10 hover:text-amber-400 hover:bg-amber-500/10 transition-all"
->
-  <Pencil size={13} />
-</button>
                       <button onClick={() => removeRow(row.key)} className="flex items-center justify-center w-8 h-8 rounded-xl text-white/20 hover:text-red-400 hover:bg-red-500/10 transition-all">
                         <Trash2 size={14} />
                       </button>
@@ -314,7 +300,6 @@ function NovaValidacaoModal({ onClose, onSaved, descMap }: { onClose: () => void
           {error && <p className="text-red-400 text-[12px] font-bold bg-red-500/8 border border-red-500/15 rounded-2xl px-5 py-4">{error}</p>}
         </div>
 
-        {/* Footer */}
         <div className="flex items-center justify-between px-8 py-6 border-t border-white/5 bg-[#07090F]">
           <span className="text-[11px] font-bold text-white/30 uppercase tracking-widest">{rows.length} divergências</span>
           <div className="flex gap-3">
@@ -389,7 +374,6 @@ function EditarValidacaoModal({ group, onClose, onSaved, descMap }: {
 
     setSaving(true); setError("");
     try {
-      // 1. Atualiza ou cria sessões
       let sessionAgId: string | null = agSession?.id ?? null;
       let sessionBrId: string | null = brSession?.id ?? null;
 
@@ -427,7 +411,7 @@ function EditarValidacaoModal({ group, onClose, onSaved, descMap }: {
         sessionBrId = data.id;
       }
 
-      // 2. Apaga divergências antigas e reinsere
+      // Apaga divergências antigas e reinsere
       const sessionIds = group.sessions.map(s => s.id);
       if (sessionIds.length > 0) {
         const { error: delErr } = await supabase.from("divergences").delete().in("session_id", sessionIds);
@@ -460,12 +444,11 @@ function EditarValidacaoModal({ group, onClose, onSaved, descMap }: {
     } finally { setSaving(false); }
   }
 
-  const field = "w-full bg-[#121622] border border-white/5 rounded-2xl px-4 py-3 text-[13px] text-white/90 outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all placeholder:text-white/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none";
+  const field = "w-full bg-[#121622] border border-white/5 rounded-2xl px-4 py-3 text-[13px] text-white/90 outline-none focus:border-amber-500/50 focus:ring-1 focus:ring-amber-500/30 transition-all placeholder:text-white/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none";
 
   return (
     <div className="fixed inset-0 z-[60] flex items-start justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto">
       <div className="bg-[#0A0D14] border border-white/10 rounded-[28px] w-full max-w-5xl my-8 shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
-        {/* Header */}
         <div className="flex items-center justify-between px-8 py-6 border-b border-white/5 bg-[#07090F]">
           <div className="flex items-center gap-4">
             <div className="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
@@ -473,14 +456,15 @@ function EditarValidacaoModal({ group, onClose, onSaved, descMap }: {
             </div>
             <div>
               <h3 className="text-base font-bold text-white uppercase tracking-wider">Editar Validação — Semana {group.week_number}</h3>
-              <p className="text-[11px] text-white/40 mt-0.5 font-medium tracking-wide">Tipo: <span className="text-amber-400/80 font-bold uppercase">{group.type}</span> · Alterações substituem os dados anteriores</p>
+              <p className="text-[11px] text-white/40 mt-0.5 font-medium tracking-wide">
+                Tipo: <span className="text-amber-400/80 font-bold uppercase">{group.type}</span> · Alterações substituem os dados anteriores
+              </p>
             </div>
           </div>
           <button onClick={onClose} className="p-2 rounded-xl text-white/30 hover:text-white/85 hover:bg-white/5 transition-colors"><X size={18} /></button>
         </div>
 
         <div className="p-8 space-y-6">
-          {/* Período */}
           <div>
             <span className="text-[10px] font-bold text-amber-500/80 uppercase tracking-widest block mb-3">Informações do Período</span>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -498,14 +482,12 @@ function EditarValidacaoModal({ group, onClose, onSaved, descMap }: {
             </div>
           </div>
 
-          {/* Observações */}
           <div>
             <label className="block text-[10px] font-semibold uppercase tracking-wider text-white/40 mb-2">Observações (opcional)</label>
             <input type="text" value={notes} onChange={e => setNotes(e.target.value)} placeholder="Ex: Contagem nas prateleiras da AG" className={field} />
           </div>
 
-          {/* Posições Auditadas */}
-          <div className="bg-[#0E121C] border border-white/5 rounded-2xl p-5">
+          <div className="bg-[#0E121C] border border-white/5 rounded-2xl p-5 shadow-inner">
             <div className="flex items-center gap-2 mb-4">
               <Building2 size={14} className="text-white/30" />
               <span className="text-[11px] font-bold text-white/60 uppercase tracking-widest">Posições Auditadas</span>
@@ -522,7 +504,6 @@ function EditarValidacaoModal({ group, onClose, onSaved, descMap }: {
             </div>
           </div>
 
-          {/* Divergências */}
           <div>
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
@@ -550,12 +531,17 @@ function EditarValidacaoModal({ group, onClose, onSaved, descMap }: {
                       <option value="AG">AG</option>
                       <option value="BR">BR</option>
                     </select>
-                    <input type="text" value={row.code} onChange={e => {
-                      const code = e.target.value;
-                      updateRow(row.key, "code", code);
-                      const clean = code.trim().toUpperCase();
-                      if (descMap[clean]) updateRow(row.key, "description", descMap[clean]);
-                    }} className={cn(field, "text-[12px] px-2 py-1.5 rounded-xl font-mono text-white/80")} />
+                    <input
+                      type="text"
+                      value={row.code}
+                      onChange={e => {
+                        const code = e.target.value;
+                        updateRow(row.key, "code", code);
+                        const clean = code.trim().toUpperCase();
+                        if (descMap[clean]) updateRow(row.key, "description", descMap[clean]);
+                      }}
+                      className={cn(field, "text-[12px] px-2 py-1.5 rounded-xl font-mono text-white/80")}
+                    />
                     <input type="text" value={row.description} onChange={e => updateRow(row.key, "description", e.target.value)} className={cn(field, "text-[12px] px-2 py-1.5 rounded-xl text-white/80")} />
                     <input type="number" value={row.system_qty} onChange={e => updateRow(row.key, "system_qty", e.target.value)} className={cn(field, "text-[12px] px-2 py-1.5 rounded-xl text-center font-mono")} />
                     <input type="number" value={row.physical_qty} onChange={e => updateRow(row.key, "physical_qty", e.target.value)} className={cn(field, "text-[12px] px-2 py-1.5 rounded-xl text-center font-mono")} />
@@ -583,7 +569,6 @@ function EditarValidacaoModal({ group, onClose, onSaved, descMap }: {
           {error && <p className="text-red-400 text-[12px] font-bold bg-red-500/8 border border-red-500/15 rounded-2xl px-5 py-4">{error}</p>}
         </div>
 
-        {/* Footer */}
         <div className="flex items-center justify-between px-8 py-6 border-t border-white/5 bg-[#07090F]">
           <span className="text-[11px] font-bold text-white/30 uppercase tracking-widest">{rows.length} divergências</span>
           <div className="flex gap-3">
@@ -639,7 +624,6 @@ function DetailView({ v, onBack, descMap }: { v: WeekGroup; onBack: () => void; 
         <ArrowLeft size={13} /> Voltar para semanas
       </button>
 
-      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
           <p className="text-[10px] font-bold text-blue-500/80 uppercase tracking-widest">G300 · Auditoria de {v.type === "inventario" ? "Inventário" : v.type === "avaria" ? "Avaria" : "Picking"}</p>
@@ -655,7 +639,6 @@ function DetailView({ v, onBack, descMap }: { v: WeekGroup; onBack: () => void; 
         </div>
       </div>
 
-      {/* Stats Cards Premium */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {[
           { label: "Empresa AG", count: validatedAg, divs: agDivs.length, acc: agAcc, bgIcon: "bg-emerald-500/10", accentColor: "text-emerald-400", barColor: "bg-emerald-500", barGlow: "shadow-[0_0_10px_rgba(16,185,129,0.4)]" },
@@ -667,13 +650,9 @@ function DetailView({ v, onBack, descMap }: { v: WeekGroup; onBack: () => void; 
             <div className="flex items-center justify-between mb-4">
               <span className={cn("text-[10px] font-extrabold uppercase tracking-widest", c.accentColor)}>{c.label}</span>
               {c.divs > 0 ? (
-                <span className="text-[10px] font-bold text-red-400 border border-red-500/20 bg-red-500/8 px-2.5 py-0.5 rounded-full">
-                  {c.divs} divergências
-                </span>
+                <span className="text-[10px] font-bold text-red-400 border border-red-500/20 bg-red-500/8 px-2.5 py-0.5 rounded-full">{c.divs} divergências</span>
               ) : (
-                <span className="text-[10px] font-bold text-emerald-400 border border-emerald-500/20 bg-emerald-500/8 px-2.5 py-0.5 rounded-full">
-                  Sem divs
-                </span>
+                <span className="text-[10px] font-bold text-emerald-400 border border-emerald-500/20 bg-emerald-500/8 px-2.5 py-0.5 rounded-full">Sem divs</span>
               )}
             </div>
             <div className="flex items-baseline gap-2 mb-4">
@@ -693,7 +672,6 @@ function DetailView({ v, onBack, descMap }: { v: WeekGroup; onBack: () => void; 
         ))}
       </div>
 
-      {/* Divergences Table */}
       <div>
         <div className="flex items-center gap-2 mb-4">
           <AlertTriangle size={14} className="text-red-400 animate-pulse" />
@@ -774,6 +752,7 @@ export default function ValidacoesPage() {
   const [weekGroups, setWeekGroups] = useState<WeekGroup[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [editingGroup, setEditingGroup] = useState<WeekGroup | null>(null);
   const [descMap, setDescMap] = useState<Record<string, string>>({});
 
   const fetchDescriptions = useCallback(async () => {
@@ -783,9 +762,7 @@ export default function ValidacoesPage() {
       data.forEach((item: any) => {
         const code = item["Código"]?.trim().toUpperCase();
         const desc = item["Descrição"];
-        if (code && desc) {
-          map[code] = desc;
-        }
+        if (code && desc) map[code] = desc;
       });
       setDescMap(map);
     }
@@ -826,7 +803,10 @@ export default function ValidacoesPage() {
     if (!confirm(`Remover Semana ${v.week_number}?`)) return;
     try {
       const ids = v.sessions.map(s => s.id);
-      if (ids.length > 0) { const { error } = await supabase.from("validation_sessions").delete().in("id", ids); if (error) throw error; }
+      if (ids.length > 0) {
+        const { error } = await supabase.from("validation_sessions").delete().in("id", ids);
+        if (error) throw error;
+      }
       fetchValidations();
     } catch (err: unknown) { alert(`Erro: ${(err as Error).message}`); }
   };
@@ -838,7 +818,6 @@ export default function ValidacoesPage() {
 
   const allDivergences = weekGroups.reduce((acc, g) => acc + g.divergences.length, 0);
 
-  // Média das acurácias individuais de cada validação (não acumulado)
   const avgAccuracy = weekGroups.length > 0
     ? weekGroups.reduce((acc, g) => {
         const valAg = g.sessions.find(s => s.company === "AG")?.validated_count ?? 0;
@@ -849,7 +828,6 @@ export default function ValidacoesPage() {
       }, 0) / weekGroups.length
     : 100;
 
-  // Acurácia por empresa (média das acurácias individuais de cada empresa)
   const allAgValidated = weekGroups.reduce((acc, g) => acc + (g.sessions.find(s => s.company === "AG")?.validated_count ?? 0), 0);
   const allBrValidated = weekGroups.reduce((acc, g) => acc + (g.sessions.find(s => s.company === "BR")?.validated_count ?? 0), 0);
   const allAgDivsCount = weekGroups.reduce((acc, g) => acc + g.divergences.filter(d => d.company === "AG").length, 0);
@@ -858,19 +836,15 @@ export default function ValidacoesPage() {
   const overallAgAccuracy = allAgValidated > 0 ? ((allAgValidated - allAgDivsCount) / allAgValidated) * 100 : 100;
   const overallBrAccuracy = allBrValidated > 0 ? ((allBrValidated - allBrDivsCount) / allBrValidated) * 100 : 100;
 
-  // Calculo Ponto Crítico (Quem tem menor acurácia ou mais erros)
   const isAgCritical = overallAgAccuracy < overallBrAccuracy;
   const criticalPoint = isAgCritical ? "Empresa AG" : "Empresa BR";
   const criticalAcc = isAgCritical ? overallAgAccuracy : overallBrAccuracy;
 
-  // Posições mais afetadas por divergências no painel lateral (pois as posições são fixas)
   const positionDivMap: Record<string, number> = {};
   weekGroups.forEach(g => {
     g.divergences.forEach(d => {
       const pos = d.position?.toUpperCase().trim();
-      if (pos) {
-        positionDivMap[pos] = (positionDivMap[pos] || 0) + 1;
-      }
+      if (pos) positionDivMap[pos] = (positionDivMap[pos] || 0) + 1;
     });
   });
   const topDivergentPositions = Object.entries(positionDivMap)
@@ -881,20 +855,18 @@ export default function ValidacoesPage() {
   return (
     <>
       {showModal && <NovaValidacaoModal onClose={() => setShowModal(false)} onSaved={fetchValidations} descMap={descMap} />}
-
       {editingGroup && (
-  <EditarValidacaoModal
-    group={editingGroup}
-    onClose={() => setEditingGroup(null)}
-    onSaved={fetchValidations}
-    descMap={descMap}
-  />
-)}
+        <EditarValidacaoModal
+          group={editingGroup}
+          onClose={() => setEditingGroup(null)}
+          onSaved={fetchValidations}
+          descMap={descMap}
+        />
+      )}
 
       <div className="min-h-full">
         <div className="w-full max-w-full px-6 md:px-10 lg:px-14 py-8 mx-auto space-y-6">
 
-          {/* Breadcrumb + Actions */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="text-white/60 font-bold uppercase tracking-widest text-[11px] flex items-center gap-2">
@@ -907,10 +879,8 @@ export default function ValidacoesPage() {
             </button>
           </div>
 
-          {/* Overview Stats */}
           {!loading && weekGroups.length > 0 && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {/* Card 1: Acurácia Média */}
               <div className="bg-[#0D1117] border border-white/5 rounded-2xl p-5 shadow-xl relative overflow-hidden group hover:border-white/10 transition-all duration-300">
                 <div className="flex items-center justify-between mb-4">
                   <span className="text-[10px] font-extrabold uppercase tracking-widest text-white/40">Taxa de Acurácia</span>
@@ -924,7 +894,6 @@ export default function ValidacoesPage() {
                 </div>
               </div>
 
-              {/* Card 2: Divergências */}
               <div className="bg-[#0D1117] border border-white/5 rounded-2xl p-5 shadow-xl relative overflow-hidden group hover:border-white/10 transition-all duration-300">
                 <div className="flex items-center justify-between mb-4">
                   <span className="text-[10px] font-extrabold uppercase tracking-widest text-white/40">Divergências</span>
@@ -938,7 +907,6 @@ export default function ValidacoesPage() {
                 </div>
               </div>
 
-              {/* Card 3: Ponto Crítico (Glowing Gold) */}
               <div className="bg-[#0D1117] border border-amber-500/20 rounded-2xl p-5 shadow-[0_0_20px_rgba(245,158,11,0.05)] relative overflow-hidden hover:border-amber-500/30 transition-all duration-300">
                 <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/[0.02] rounded-full blur-2xl" />
                 <div className="flex items-center justify-between mb-4">
@@ -956,15 +924,13 @@ export default function ValidacoesPage() {
           )}
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-            
+
             <div className="space-y-6 lg:col-span-1">
-              
               <div className="bg-[#0D1117] border border-white/5 rounded-2xl p-6 shadow-xl space-y-5">
                 <div className="flex justify-between items-center">
                   <h3 className="text-[11px] font-extrabold text-white uppercase tracking-widest">Acurácia por Empresa</h3>
                   <span className="text-[9px] font-bold text-white/35 uppercase tracking-widest">2 Unidades</span>
                 </div>
-
                 <div className="space-y-4">
                   <div className="bg-[#080B11]/50 border border-white/5 rounded-xl p-4 space-y-2.5">
                     <div className="flex justify-between items-center">
@@ -975,11 +941,10 @@ export default function ValidacoesPage() {
                       <div className="h-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.3)]" style={{ width: `${overallAgAccuracy}%` }} />
                     </div>
                     <div className="flex justify-between text-[9px] font-bold uppercase tracking-widest text-white/30">
-                       <span>Acurácia média AG</span>
-                       <span>{overallAgAccuracy.toFixed(1)}%</span>
+                      <span>Acurácia média AG</span>
+                      <span>{overallAgAccuracy.toFixed(1)}%</span>
                     </div>
                   </div>
-
                   <div className="bg-[#080B11]/50 border border-white/5 rounded-xl p-4 space-y-2.5">
                     <div className="flex justify-between items-center">
                       <span className="text-[11px] font-bold text-white/80 uppercase tracking-widest">Empresa BR</span>
@@ -996,7 +961,6 @@ export default function ValidacoesPage() {
                 </div>
               </div>
 
-              {/* Posições Mais Afetadas */}
               {topDivergentPositions.length > 0 && (
                 <div className="bg-[#0D1117] border border-white/5 rounded-2xl p-6 shadow-xl space-y-4">
                   <div>
@@ -1020,10 +984,8 @@ export default function ValidacoesPage() {
                   </div>
                 </div>
               )}
-
             </div>
 
-            {/* LADO DIREITO: Tabela de Histórico (2/3) */}
             <div className="lg:col-span-2">
               <div className="bg-[#0D1117] border border-white/5 rounded-2xl shadow-xl overflow-hidden">
                 <div className="px-6 py-5 border-b border-white/5 bg-[#080B11]/30 flex flex-wrap items-center justify-between gap-4">
@@ -1059,7 +1021,7 @@ export default function ValidacoesPage() {
                           <th className="px-6 py-4 text-center text-[10px] font-bold uppercase tracking-widest text-white/30">AG</th>
                           <th className="px-6 py-4 text-center text-[10px] font-bold uppercase tracking-widest text-white/30">BR</th>
                           <th className="px-6 py-4 text-center text-[10px] font-bold uppercase tracking-widest text-white/30">Acurácia</th>
-                          <th className="px-6 py-4 w-20"></th>
+                          <th className="px-6 py-4 w-24"></th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-white/[0.03]">
@@ -1074,9 +1036,7 @@ export default function ValidacoesPage() {
                           return (
                             <tr key={key} onClick={() => { setSelected(v); setView("detail"); }}
                               className="group hover:bg-white/[0.01] transition-all cursor-pointer">
-
-                              {/* Semana */}
-                              <td className="px-6 py-4.5">
+                              <td className="px-6 py-4">
                                 <div className="flex flex-col">
                                   <span className="text-[13px] font-bold text-white group-hover:text-blue-400 transition-colors">Semana {v.week_number}</span>
                                   {v.notes ? (
@@ -1086,42 +1046,30 @@ export default function ValidacoesPage() {
                                   )}
                                 </div>
                               </td>
-
-                              {/* Período */}
-                              <td className="px-6 py-4.5">
+                              <td className="px-6 py-4">
                                 <span className="text-[12px] font-bold text-white/60 font-mono tabular-nums">{fmtFullDate(v.week_start)}</span>
                               </td>
-
-                              {/* Tipo */}
-                              <td className="px-6 py-4.5">
+                              <td className="px-6 py-4">
                                 <span className={cn(
                                   "text-[10px] font-extrabold uppercase tracking-widest border px-2.5 py-1 rounded-full",
-                                  v.type === "picking"
-                                    ? "text-blue-400 bg-blue-500/5 border-blue-500/10"
-                                    : v.type === "avaria"
-                                    ? "text-amber-400 bg-amber-500/5 border-amber-500/10"
-                                    : "text-purple-400 bg-purple-500/5 border-purple-500/10"
+                                  v.type === "picking" ? "text-blue-400 bg-blue-500/5 border-blue-500/10" :
+                                  v.type === "avaria" ? "text-amber-400 bg-amber-500/5 border-amber-500/10" :
+                                  "text-purple-400 bg-purple-500/5 border-purple-500/10"
                                 )}>
                                   {v.type === "picking" ? "Picking" : v.type === "avaria" ? "Avaria" : "Inventário"}
                                 </span>
                               </td>
-
-                              {/* AG */}
-                              <td className="px-6 py-4.5 text-center">
+                              <td className="px-6 py-4 text-center">
                                 <span className={cn("text-[12px] font-bold font-mono tabular-nums", valAg > 0 ? "text-white/80" : "text-white/10")}>
                                   {valAg > 0 ? valAg : "—"}
                                 </span>
                               </td>
-
-                              {/* BR */}
-                              <td className="px-6 py-4.5 text-center">
+                              <td className="px-6 py-4 text-center">
                                 <span className={cn("text-[12px] font-bold font-mono tabular-nums", valBr > 0 ? "text-white/80" : "text-white/10")}>
                                   {valBr > 0 ? valBr : "—"}
                                 </span>
                               </td>
-
-                              {/* Acurácia + Badge Estilo Relatório Recebimento */}
-                              <td className="px-6 py-4.5 text-center">
+                              <td className="px-6 py-4 text-center">
                                 <div className="flex items-center justify-center gap-3">
                                   <span className={cn(
                                     "text-[12px] font-extrabold font-mono tabular-nums",
@@ -1130,21 +1078,30 @@ export default function ValidacoesPage() {
                                     {acc.toFixed(1)}%
                                   </span>
                                   {divs > 0 ? (
-                                    <span className="text-[9px] font-extrabold uppercase tracking-widest text-red-400 border border-red-500/20 bg-red-500/5 px-2 py-0.5 rounded-full flex items-center gap-1 shadow-inner shrink-0">
+                                    <span className="text-[9px] font-extrabold uppercase tracking-widest text-red-400 border border-red-500/20 bg-red-500/5 px-2 py-0.5 rounded-full flex items-center gap-1 shrink-0">
                                       <AlertTriangle size={8} /> {divs} divs
                                     </span>
                                   ) : (
-                                    <span className="text-[9px] font-extrabold uppercase tracking-widest text-emerald-400 border border-emerald-500/20 bg-emerald-500/5 px-2 py-0.5 rounded-full flex items-center gap-1 shadow-inner shrink-0">
+                                    <span className="text-[9px] font-extrabold uppercase tracking-widest text-emerald-400 border border-emerald-500/20 bg-emerald-500/5 px-2 py-0.5 rounded-full flex items-center gap-1 shrink-0">
                                       <CheckCircle2 size={8} /> 100%
                                     </span>
                                   )}
                                 </div>
                               </td>
-
-                              {/* Ações */}
-                              <td className="px-6 py-4.5 text-right" onClick={e => e.stopPropagation()}>
-                                <div className="flex items-center justify-end gap-3">
-                                  <button onClick={e => deleteWeekGroup(v, e)} className="p-2 rounded-xl text-white/10 hover:text-red-500 hover:bg-red-500/10 transition-all">
+                              <td className="px-6 py-4 text-right" onClick={e => e.stopPropagation()}>
+                                <div className="flex items-center justify-end gap-2">
+                                  <button
+                                    onClick={e => { e.stopPropagation(); setEditingGroup(v); }}
+                                    className="p-2 rounded-xl text-white/10 hover:text-amber-400 hover:bg-amber-500/10 transition-all"
+                                    title="Editar validação"
+                                  >
+                                    <Pencil size={13} />
+                                  </button>
+                                  <button
+                                    onClick={e => deleteWeekGroup(v, e)}
+                                    className="p-2 rounded-xl text-white/10 hover:text-red-500 hover:bg-red-500/10 transition-all"
+                                    title="Remover validação"
+                                  >
                                     <Trash2 size={13} />
                                   </button>
                                   <ChevronRight size={16} className="text-white/10 group-hover:text-white/40 group-hover:translate-x-0.5 transition-all" />
@@ -1161,7 +1118,6 @@ export default function ValidacoesPage() {
             </div>
 
           </div>
-
         </div>
       </div>
     </>
