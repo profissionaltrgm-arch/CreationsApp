@@ -1469,10 +1469,10 @@ export default function ValidacoesPage() {
                       <colgroup>
                         <col style={{ width: '90px' }} />
                         <col style={{ width: '100px' }} />
-                        <col style={{ width: '220px' }} />
+                        <col style={{ width: '280px' }} />
                         <col style={{ width: '80px' }} />
-                        <col style={{ width: '220px' }} />
-                        <col style={{ width: '200px' }} />
+                        <col style={{ width: '100px' }} />
+                        <col style={{ width: '240px' }} />
                         <col style={{ width: '100px' }} />
                         <col style={{ width: '48px' }} />
                       </colgroup>
@@ -1482,7 +1482,7 @@ export default function ValidacoesPage() {
                           <th className="px-4 py-4 text-left text-[10px] font-bold uppercase tracking-widest text-white/30 whitespace-nowrap">Código</th>
                           <th className="px-4 py-4 text-left text-[10px] font-bold uppercase tracking-widest text-white/30 whitespace-nowrap">Descrição</th>
                           <th className="px-4 py-4 text-center text-[10px] font-bold uppercase tracking-widest text-white/30 whitespace-nowrap">Empresa</th>
-                          <th className="px-4 py-4 text-left text-[10px] font-bold uppercase tracking-widest text-white/30 whitespace-nowrap">Semanas</th>
+                          <th className="px-4 py-4 text-center text-[10px] font-bold uppercase tracking-widest text-white/30 whitespace-nowrap">Semanas</th>
                           <th className="px-4 py-4 text-left text-[10px] font-bold uppercase tracking-widest text-white/30 whitespace-nowrap">Tratamento</th>
                           <th className="px-4 py-4 text-center text-[10px] font-bold uppercase tracking-widest text-white/30 whitespace-nowrap">Status</th>
                           <th className="px-4 py-4"></th>
@@ -1494,18 +1494,22 @@ export default function ValidacoesPage() {
                           const uniqueWeeks = Array.from(new Set(group.items.map(i => i.week_number))).sort((a, b) => a - b);
                           
                           return (
-                            <tr key={group.key} className="hover:bg-white/[0.01] transition-all">
+                            <tr key={group.key} className="hover:bg-white/[0.02] hover:translate-x-0.5 hover:shadow-[inset_3px_0_0_#3b82f6] transition-all duration-300 ease-out cursor-pointer">
                               <td className="px-4 py-3 font-mono text-[12px] text-white/50 whitespace-nowrap overflow-hidden text-ellipsis">{group.position}</td>
                               <td className="px-4 py-3 font-mono text-[12px] text-white/80 font-bold whitespace-nowrap overflow-hidden text-ellipsis">{group.code}</td>
                               <td className="px-4 py-3 text-[12px] text-white/45 overflow-hidden text-ellipsis whitespace-nowrap" title={desc}>{desc || <span className="text-white/20">—</span>}</td>
                               <td className="px-4 py-3 text-center text-[12px] font-bold text-white/60 whitespace-nowrap">{group.company}</td>
-                              <td className="px-4 py-3">
-                                <div className="flex flex-wrap gap-1">
-                                  {uniqueWeeks.map(w => (
-                                    <span key={w} className="text-[9px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20 px-1.5 py-0.5 rounded-full whitespace-nowrap">
-                                      S{w}
-                                    </span>
-                                  ))}
+                              <td className="px-4 py-3 text-center">
+                                <div className="inline-block relative group/tooltip">
+                                  <span className="text-[10px] font-extrabold bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded-full cursor-help">
+                                    {uniqueWeeks.length} {uniqueWeeks.length === 1 ? 'sem' : 'sems'}
+                                  </span>
+                                  {/* Premium Tooltip */}
+                                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover/tooltip:block bg-[#0E121C] border border-white/10 rounded-lg px-2.5 py-1.5 text-[9px] font-extrabold text-white/80 whitespace-nowrap shadow-2xl z-50 pointer-events-none">
+                                    Semanas: {uniqueWeeks.map(w => `S${w}`).join(", ")}
+                                    {/* Arrow */}
+                                    <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-[#0E121C] w-0 h-0" />
+                                  </div>
                                 </div>
                               </td>
                               <td className="px-4 py-3 text-[12px] text-white/70 overflow-hidden text-ellipsis whitespace-nowrap" title={group.treatment || ''}>{group.treatment || <span className="text-white/20">—</span>}</td>
