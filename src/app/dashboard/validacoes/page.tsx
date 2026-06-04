@@ -1437,20 +1437,24 @@ export default function ValidacoesPage() {
                               </td>
                               <td className="px-6 py-4 text-right" onClick={e => e.stopPropagation()}>
                                 <div className="flex items-center justify-end gap-2">
-                                  <button
-                                    onClick={e => { e.stopPropagation(); setEditingGroup(v); }}
-                                    className="p-2 rounded-xl text-white/10 hover:text-amber-400 hover:bg-amber-500/10 transition-all"
-                                    title="Editar validação"
-                                  >
-                                    <Pencil size={13} />
-                                  </button>
-                                  <button
-                                    onClick={e => deleteWeekGroup(v, e)}
-                                    className="p-2 rounded-xl text-white/10 hover:text-red-500 hover:bg-red-500/10 transition-all"
-                                    title="Remover validação"
-                                  >
-                                    <Trash2 size={13} />
-                                  </button>
+                                  {isAdmin && (
+                                    <>
+                                      <button
+                                        onClick={e => { e.stopPropagation(); setEditingGroup(v); }}
+                                        className="p-2 rounded-xl text-white/10 hover:text-amber-400 hover:bg-amber-500/10 transition-all"
+                                        title="Editar validação"
+                                      >
+                                        <Pencil size={13} />
+                                      </button>
+                                      <button
+                                        onClick={e => deleteWeekGroup(v, e)}
+                                        className="p-2 rounded-xl text-white/10 hover:text-red-500 hover:bg-red-500/10 transition-all"
+                                        title="Remover validação"
+                                      >
+                                        <Trash2 size={13} />
+                                      </button>
+                                    </>
+                                  )}
                                   <ChevronRight size={16} className="text-white/10 group-hover:text-white/40 group-hover:translate-x-0.5 transition-all" />
                                 </div>
                               </td>
@@ -1522,13 +1526,15 @@ export default function ValidacoesPage() {
                                 )}
                               </td>
                               <td className="px-2 py-3 text-right">
-                                <button
-                                  onClick={() => setEditingTratativa(group)}
-                                  className="p-1.5 rounded-xl text-white/10 hover:text-blue-400 hover:bg-blue-500/10 transition-all"
-                                  title="Editar tratativa"
-                                >
-                                  <Pencil size={13} />
-                                </button>
+                                {isAdmin && (
+                                  <button
+                                    onClick={() => setEditingTratativa(group)}
+                                    className="p-1.5 rounded-xl text-white/10 hover:text-blue-400 hover:bg-blue-500/10 transition-all"
+                                    title="Editar tratativa"
+                                  >
+                                    <Pencil size={13} />
+                                  </button>
+                                )}
                               </td>
                             </tr>
                           );
