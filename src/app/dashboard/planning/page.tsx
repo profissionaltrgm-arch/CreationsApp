@@ -53,6 +53,17 @@ export default function PlanningPage() {
   const [loading, setLoading]     = useState(true);
   const [search, setSearch]       = useState("");
   const [activeTab, setActiveTab] = useState<"arm" | "exp" | "adm">("arm");
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsAdmin(!!session);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsAdmin(!!session);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
   
   // Modal State
   const [selectedEmp, setSelectedEmp] = useState<Employee | null>(null);
@@ -232,8 +243,11 @@ export default function PlanningPage() {
                                 return (
                                   <tr 
                                     key={emp.employee_id} 
-                                    onClick={() => setSelectedEmp(emp)}
-                                    className="border-b border-white/[0.03] hover:bg-blue-500/[0.05] transition-all group cursor-pointer relative"
+                                    onClick={() => isAdmin && setSelectedEmp(emp)}
+                                    className={cn(
+                                      "border-b border-white/[0.03] hover:bg-blue-500/[0.05] transition-all group relative",
+                                      isAdmin ? "cursor-pointer" : "cursor-default"
+                                    )}
                                   >
                                     <td className="relative p-0 w-0">
                                       {/* Indicador de Hover Lateral */}
