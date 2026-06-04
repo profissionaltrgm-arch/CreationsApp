@@ -2,19 +2,15 @@
 
 import { useState } from "react";
 import { 
-  LayoutDashboard, 
   Users, 
   LogOut, 
   Menu, 
-  Search,
   Bell,
   User as UserIcon,
   ShieldCheck,
   Calendar,
   Zap,
   CalendarDays,
-  Settings,
-  HelpCircle,
   PackageSearch
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -31,7 +27,6 @@ export default function DashboardLayout({
   const pathname = usePathname();
 
   const menuItems = [
-    { label: "Dashboard",     icon: LayoutDashboard, href: "/dashboard" },
     { label: "Colaboradores", icon: Users,            href: "/dashboard/employees" },
     { label: "Planejamento",  icon: CalendarDays,     href: "/dashboard/planning" },
     { label: "Ausências",     icon: Calendar,         href: "/dashboard/absences" },
@@ -46,11 +41,12 @@ export default function DashboardLayout({
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex flex-col transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] border-r border-white/5 shadow-[20px_0_40px_rgba(0,0,0,0.4)] overflow-hidden",
+          "fixed inset-y-0 left-0 z-50 flex flex-col transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] border-r border-white/[0.04] overflow-hidden",
           isHovered ? "w-60" : "w-[52px]"
         )}
         style={{
           background: "linear-gradient(180deg, #05070A 0%, #080B10 100%)",
+          boxShadow: isHovered ? "4px 0 32px rgba(0,0,0,0.5)" : "none",
         }}
       >
         {/* Logo Section */}
@@ -128,25 +124,15 @@ export default function DashboardLayout({
       </aside>
 
       {/* Main Content Area */}
-      <div className={cn(
-        "flex-1 flex flex-col min-w-0 transition-all duration-500",
-        "pl-[52px]"
-      )}>
+      <div
+        className="flex-1 flex flex-col min-w-0 transition-all duration-500"
+        style={{ paddingLeft: "52px" }}
+      >
         {/* Header Superior Premium */}
         <header
-          className="h-16 flex items-center justify-between px-8 sticky top-0 z-40 border-b border-white/5 backdrop-blur-3xl"
+          className="h-16 flex items-center justify-end px-8 sticky top-0 z-40 border-b border-white/5 backdrop-blur-3xl"
           style={{ background: "rgba(5,7,10,0.7)" }}
         >
-          <div className="flex items-center gap-6">
-            <button
-              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className="p-2 rounded-xl lg:hidden transition-colors hover:bg-white/5 text-gray-500"
-            >
-              <Menu size={20} />
-            </button>
-            
-
-          </div>
 
           <div className="flex items-center gap-6">
 
