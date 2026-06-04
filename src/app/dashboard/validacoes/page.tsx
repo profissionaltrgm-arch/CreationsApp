@@ -796,10 +796,7 @@ function DetailView({ v, onBack, descMap }: { v: WeekGroup; onBack: () => void; 
           </h2>
           {v.notes && <p className="text-[12px] text-white/35 mt-1.5 bg-white/5 border border-white/5 rounded-xl px-4 py-2.5 inline-block">{v.notes}</p>}
         </div>
-        <div className="text-left md:text-right shrink-0">
-          <p className="text-[10px] text-blue-400/60 font-bold uppercase tracking-widest">Semana {v.week_number} · {v.year}</p>
-          <p className="text-[14px] font-bold text-white/80 mt-1 bg-white/5 border border-white/5 px-4 py-1.5 rounded-full inline-block tabular-nums">{fmtDate(v.week_start)} — {fmtDate(v.week_end)}</p>
-        </div>
+
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
