@@ -189,7 +189,7 @@ function ShareCard({
   return (
     <div
       ref={cardRef}
-      style={{ fontFamily: "'Inter', sans-serif", width: 700, background: "#080C12", padding: "36px 40px", borderRadius: 20 }}
+      style={{ fontFamily: "'Inter', sans-serif", width: "100%", maxWidth: 700, background: "#080C12", padding: "36px 40px", borderRadius: 20 }}
     >
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 28 }}>
@@ -234,8 +234,8 @@ function ShareCard({
       </div>
 
       {/* Groups (BR, AG) */}
-      {groups.map((group) => (
-        <div key={group.label} style={{ marginBottom: 24 }}>
+      {groups.map((group, groupIdx) => (
+        <div key={group.label} style={{ marginBottom: 24, marginTop: groupIdx > 0 ? 32 : 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
             <span style={{
               fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1.5,
@@ -383,7 +383,7 @@ export default function QuarentenaPage() {
     if (!isAdmin) return;
     setUpdatingId(item.id);
     await supabase.from("quarantine").update({ resolved: !item.resolved }).eq("id", item.id);
-    setItems((prev) => prev.map((i) => (i.id === item.id ? { ...i, resolved: !i.resolved } : i)));
+    setItems((prev) => prev.map((i) => (i.id === item.id ? { ...i, resolved: !item.resolved } : i)));
     setUpdatingId(null);
   }
 
@@ -461,7 +461,7 @@ export default function QuarentenaPage() {
   return (
     <>
       {/* ── Share Card (hidden, off-screen) ── */}
-      <div style={{ position: "fixed", left: -9999, top: 0, zIndex: -1 }}>
+      <div style={{ position: "fixed", left: -9999, top: 0, zIndex: -1, width: 700 }}>
         <ShareCard cardRef={shareCardRef} items={items} descMap={descMap} />
       </div>
 
@@ -483,7 +483,7 @@ export default function QuarentenaPage() {
 
             {/* Preview */}
             <div className="p-6 bg-[#050709] flex-1 overflow-y-auto flex justify-center items-start min-h-0">
-              <div style={{ zoom: 0.75, display: "flex", justifyContent: "center" }}>
+              <div className="w-full max-w-[580px] flex justify-center">
                 <ShareCard cardRef={{ current: null }} items={items} descMap={descMap} />
               </div>
             </div>
