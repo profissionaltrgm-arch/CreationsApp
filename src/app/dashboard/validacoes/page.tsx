@@ -105,6 +105,7 @@ function NovaValidacaoModal({ onClose, onSaved, descMap }: { onClose: () => void
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [keyCounter, setKeyCounter] = useState(1);
+  const [activeDropdown, setActiveDropdown] = useState<{ key: number, field: 'company' | 'resolved' } | null>(null);
 
   useEffect(() => {
     if (weekStart) {
@@ -183,6 +184,7 @@ function NovaValidacaoModal({ onClose, onSaved, descMap }: { onClose: () => void
   }
 
   const field = "w-full bg-[#121622] border border-white/5 rounded-2xl px-4 py-3 text-[13px] text-white/90 outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all placeholder:text-white/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none";
+  const rowField = "w-full bg-[#121622] border border-white/5 rounded-xl px-2 py-1.5 text-[11px] text-white/90 outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all placeholder:text-white/20";
 
   return (
     <div className="fixed inset-0 z-[60] flex items-start justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto">
@@ -260,22 +262,49 @@ function NovaValidacaoModal({ onClose, onSaved, descMap }: { onClose: () => void
             </div>
 
             <div className="border border-white/5 rounded-2xl overflow-hidden bg-[#07090F]">
-              <div className="grid bg-[#0E121C] border-b border-white/5 px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-white/30"
-                style={{ gridTemplateColumns: "120px 80px 110px 2fr 100px 80px 80px 44px" }}>
+              <div className="grid bg-[#0E121C] border-b border-white/5 px-3 py-2 text-[9px] font-bold uppercase tracking-widest text-white/30 gap-1.5"
+                style={{ gridTemplateColumns: "100px 65px 100px 1fr 105px 65px 65px 36px" }}>
                 {["Posição", "Empresa", "Código", "Tratamento", "Status", "Sistema", "Físico", ""].map(h => (
-                  <span key={h} className={cn((h === "Sistema" || h === "Físico") && "text-center")}>{h}</span>
+                  <span key={h} className={cn((h === "Sistema" || h === "Físico" || h === "Empresa" || h === "Status") && "text-center")}>{h}</span>
                 ))}
               </div>
 
               <div className="max-h-60 overflow-y-auto custom-scrollbar divide-y divide-white/[0.03]">
                 {rows.map(row => (
-                  <div key={row.key} className="grid items-center px-4 py-3 hover:bg-white/[0.01] gap-2"
-                    style={{ gridTemplateColumns: "120px 80px 110px 2fr 100px 80px 80px 44px" }}>
-                    <input type="text" value={row.position} placeholder="PK30002A" onChange={e => updateRow(row.key, "position", e.target.value)} className={cn(field, "text-[12px] px-2 py-1.5 rounded-xl font-mono uppercase text-white/80")} />
-                    <select value={row.company} onChange={e => updateRow(row.key, "company", e.target.value as Company)} className={cn(field, "text-[12px] px-2 py-1.5 rounded-xl")}>
-                      <option value="AG">AG</option>
-                      <option value="BR">BR</option>
-                    </select>
+                  <div key={row.key} className="grid items-center px-3 py-2 hover:bg-white/[0.01] gap-1.5"
+                    style={{ gridTemplateColumns: "100px 65px 100px 1fr 105px 65px 65px 36px" }}>
+                    <input type="text" value={row.position} placeholder="PK30002A" onChange={e => updateRow(row.key, "position", e.target.value)} className={cn(rowField, "px-2 py-1.5 rounded-xl font-mono uppercase text-white/80")} />
+                    
+                    {/* Empresa Custom Dropdown */}
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() => setActiveDropdown(activeDropdown?.key === row.key && activeDropdown?.field === 'company' ? null : { key: row.key, field: 'company' })}
+                        className="w-full bg-[#121622] border border-white/5 rounded-xl px-2 py-1.5 text-[11px] font-bold text-white/80 outline-none hover:border-white/10 transition-all flex items-center justify-between gap-1"
+                      >
+                        <span className="w-full text-center">{row.company}</span>
+                        <ChevronDown size={10} className="text-white/30 shrink-0" />
+                      </button>
+                      {activeDropdown?.key === row.key && activeDropdown?.field === 'company' && (
+                        <div className="absolute top-full left-0 right-0 mt-1 bg-[#121622] border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50">
+                          <button
+                            type="button"
+                            onClick={() => { updateRow(row.key, "company", "AG"); setActiveDropdown(null); }}
+                            className="w-full text-center px-2 py-1.5 text-[11px] font-bold text-white/80 hover:bg-white/5 transition-all"
+                          >
+                            AG
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => { updateRow(row.key, "company", "BR"); setActiveDropdown(null); }}
+                            className="w-full text-center px-2 py-1.5 text-[11px] font-bold text-white/80 hover:bg-white/5 transition-all"
+                          >
+                            BR
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
                     <input
                       type="text"
                       value={row.code}
@@ -288,15 +317,44 @@ function NovaValidacaoModal({ onClose, onSaved, descMap }: { onClose: () => void
                           updateRow(row.key, "description", descMap[cleanCode]);
                         }
                       }}
-                      className={cn(field, "text-[12px] px-2 py-1.5 rounded-xl font-mono text-white/80")}
+                      className={cn(rowField, "px-2 py-1.5 rounded-xl font-mono text-white/80")}
                     />
-                    <input type="text" value={row.treatment} placeholder="Tratamento..." onChange={e => updateRow(row.key, "treatment", e.target.value)} className={cn(field, "text-[12px] px-2 py-1.5 rounded-xl text-white/80")} />
-                    <select value={row.resolved ? "true" : "false"} onChange={e => updateRow(row.key, "resolved", e.target.value === "true")} className={cn(field, "text-[12px] px-2 py-1.5 rounded-xl")}>
-                      <option value="false">Pendente</option>
-                      <option value="true">Resolvido</option>
-                    </select>
-                    <input type="number" value={row.system_qty} placeholder="0" onChange={e => updateRow(row.key, "system_qty", e.target.value)} className={cn(field, "text-[12px] px-2 py-1.5 rounded-xl text-center font-mono")} />
-                    <input type="number" value={row.physical_qty} placeholder="0" onChange={e => updateRow(row.key, "physical_qty", e.target.value)} className={cn(field, "text-[12px] px-2 py-1.5 rounded-xl text-center font-mono")} />
+                    <input type="text" value={row.treatment} placeholder="Tratamento..." onChange={e => updateRow(row.key, "treatment", e.target.value)} className={cn(rowField, "px-2 py-1.5 rounded-xl text-white/80")} />
+                    
+                    {/* Status Custom Dropdown */}
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() => setActiveDropdown(activeDropdown?.key === row.key && activeDropdown?.field === 'resolved' ? null : { key: row.key, field: 'resolved' })}
+                        className="w-full bg-[#121622] border border-white/5 rounded-xl px-2 py-1.5 text-[11px] font-bold outline-none hover:border-white/10 transition-all flex items-center justify-between gap-1"
+                      >
+                        <span className={cn("w-full text-center", row.resolved ? "text-emerald-400" : "text-amber-400")}>
+                          {row.resolved ? "Resolvido" : "Pendente"}
+                        </span>
+                        <ChevronDown size={10} className="text-white/30 shrink-0" />
+                      </button>
+                      {activeDropdown?.key === row.key && activeDropdown?.field === 'resolved' && (
+                        <div className="absolute top-full left-0 right-0 mt-1 bg-[#121622] border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50 min-w-[90px]">
+                          <button
+                            type="button"
+                            onClick={() => { updateRow(row.key, "resolved", false); setActiveDropdown(null); }}
+                            className="w-full text-center px-2 py-1.5 text-[11px] font-bold text-amber-400 hover:bg-white/5 transition-all"
+                          >
+                            Pendente
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => { updateRow(row.key, "resolved", true); setActiveDropdown(null); }}
+                            className="w-full text-center px-2 py-1.5 text-[11px] font-bold text-emerald-400 hover:bg-white/5 transition-all"
+                          >
+                            Resolvido
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    <input type="number" value={row.system_qty} placeholder="0" onChange={e => updateRow(row.key, "system_qty", e.target.value)} className={cn(rowField, "px-1 py-1.5 rounded-xl text-center font-mono")} />
+                    <input type="number" value={row.physical_qty} placeholder="0" onChange={e => updateRow(row.key, "physical_qty", e.target.value)} className={cn(rowField, "px-1 py-1.5 rounded-xl text-center font-mono")} />
                     <div className="flex justify-end">
                       <button onClick={() => removeRow(row.key)} className="flex items-center justify-center w-8 h-8 rounded-xl text-white/20 hover:text-red-400 hover:bg-red-500/10 transition-all">
                         <Trash2 size={14} />
@@ -374,6 +432,7 @@ function EditarValidacaoModal({ group, onClose, onSaved, descMap }: {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [keyCounter, setKeyCounter] = useState(group.divergences.length + 1);
+  const [activeDropdown, setActiveDropdown] = useState<{ key: number, field: 'company' | 'resolved' } | null>(null);
 
   useEffect(() => {
     if (weekStart) {
@@ -546,22 +605,49 @@ function EditarValidacaoModal({ group, onClose, onSaved, descMap }: {
             </div>
 
             <div className="border border-white/5 rounded-2xl overflow-hidden bg-[#07090F]">
-              <div className="grid bg-[#0E121C] border-b border-white/5 px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-white/30"
-                style={{ gridTemplateColumns: "120px 80px 110px 2fr 100px 80px 80px 44px" }}>
+              <div className="grid bg-[#0E121C] border-b border-white/5 px-3 py-2 text-[9px] font-bold uppercase tracking-widest text-white/30 gap-1.5"
+                style={{ gridTemplateColumns: "100px 65px 100px 1fr 105px 65px 65px 36px" }}>
                 {["Posição", "Empresa", "Código", "Tratamento", "Status", "Sistema", "Físico", ""].map(h => (
-                  <span key={h} className={cn((h === "Sistema" || h === "Físico") && "text-center")}>{h}</span>
+                  <span key={h} className={cn((h === "Sistema" || h === "Físico" || h === "Empresa" || h === "Status") && "text-center")}>{h}</span>
                 ))}
               </div>
 
               <div className="max-h-60 overflow-y-auto custom-scrollbar divide-y divide-white/[0.03]">
                 {rows.map(row => (
-                  <div key={row.key} className="grid items-center px-4 py-3 hover:bg-white/[0.01] gap-2"
-                    style={{ gridTemplateColumns: "120px 80px 110px 2fr 100px 80px 80px 44px" }}>
-                    <input type="text" value={row.position} onChange={e => updateRow(row.key, "position", e.target.value)} className={cn(field, "text-[12px] px-2 py-1.5 rounded-xl font-mono uppercase text-white/80")} />
-                    <select value={row.company} onChange={e => updateRow(row.key, "company", e.target.value as Company)} className={cn(field, "text-[12px] px-2 py-1.5 rounded-xl")}>
-                      <option value="AG">AG</option>
-                      <option value="BR">BR</option>
-                    </select>
+                  <div key={row.key} className="grid items-center px-3 py-2 hover:bg-white/[0.01] gap-1.5"
+                    style={{ gridTemplateColumns: "100px 65px 100px 1fr 105px 65px 65px 36px" }}>
+                    <input type="text" value={row.position} onChange={e => updateRow(row.key, "position", e.target.value)} className={cn(rowField, "px-2 py-1.5 rounded-xl font-mono uppercase text-white/80")} />
+                    
+                    {/* Empresa Custom Dropdown */}
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() => setActiveDropdown(activeDropdown?.key === row.key && activeDropdown?.field === 'company' ? null : { key: row.key, field: 'company' })}
+                        className="w-full bg-[#121622] border border-white/5 rounded-xl px-2 py-1.5 text-[11px] font-bold text-white/80 outline-none hover:border-white/10 transition-all flex items-center justify-between gap-1"
+                      >
+                        <span className="w-full text-center">{row.company}</span>
+                        <ChevronDown size={10} className="text-white/30 shrink-0" />
+                      </button>
+                      {activeDropdown?.key === row.key && activeDropdown?.field === 'company' && (
+                        <div className="absolute top-full left-0 right-0 mt-1 bg-[#121622] border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50">
+                          <button
+                            type="button"
+                            onClick={() => { updateRow(row.key, "company", "AG"); setActiveDropdown(null); }}
+                            className="w-full text-center px-2 py-1.5 text-[11px] font-bold text-white/80 hover:bg-white/5 transition-all"
+                          >
+                            AG
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => { updateRow(row.key, "company", "BR"); setActiveDropdown(null); }}
+                            className="w-full text-center px-2 py-1.5 text-[11px] font-bold text-white/80 hover:bg-white/5 transition-all"
+                          >
+                            BR
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
                     <input
                       type="text"
                       value={row.code}
@@ -571,15 +657,44 @@ function EditarValidacaoModal({ group, onClose, onSaved, descMap }: {
                         const clean = code.trim().toUpperCase();
                         if (descMap[clean]) updateRow(row.key, "description", descMap[clean]);
                       }}
-                      className={cn(field, "text-[12px] px-2 py-1.5 rounded-xl font-mono text-white/80")}
+                      className={cn(rowField, "px-2 py-1.5 rounded-xl font-mono text-white/80")}
                     />
-                    <input type="text" value={row.treatment} placeholder="Tratamento..." onChange={e => updateRow(row.key, "treatment", e.target.value)} className={cn(field, "text-[12px] px-2 py-1.5 rounded-xl text-white/80")} />
-                    <select value={row.resolved ? "true" : "false"} onChange={e => updateRow(row.key, "resolved", e.target.value === "true")} className={cn(field, "text-[12px] px-2 py-1.5 rounded-xl")}>
-                      <option value="false">Pendente</option>
-                      <option value="true">Resolvido</option>
-                    </select>
-                    <input type="number" value={row.system_qty} onChange={e => updateRow(row.key, "system_qty", e.target.value)} className={cn(field, "text-[12px] px-2 py-1.5 rounded-xl text-center font-mono")} />
-                    <input type="number" value={row.physical_qty} onChange={e => updateRow(row.key, "physical_qty", e.target.value)} className={cn(field, "text-[12px] px-2 py-1.5 rounded-xl text-center font-mono")} />
+                    <input type="text" value={row.treatment} placeholder="Tratamento..." onChange={e => updateRow(row.key, "treatment", e.target.value)} className={cn(rowField, "px-2 py-1.5 rounded-xl text-white/80")} />
+                    
+                    {/* Status Custom Dropdown */}
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() => setActiveDropdown(activeDropdown?.key === row.key && activeDropdown?.field === 'resolved' ? null : { key: row.key, field: 'resolved' })}
+                        className="w-full bg-[#121622] border border-white/5 rounded-xl px-2 py-1.5 text-[11px] font-bold outline-none hover:border-white/10 transition-all flex items-center justify-between gap-1"
+                      >
+                        <span className={cn("w-full text-center", row.resolved ? "text-emerald-400" : "text-amber-400")}>
+                          {row.resolved ? "Resolvido" : "Pendente"}
+                        </span>
+                        <ChevronDown size={10} className="text-white/30 shrink-0" />
+                      </button>
+                      {activeDropdown?.key === row.key && activeDropdown?.field === 'resolved' && (
+                        <div className="absolute top-full left-0 right-0 mt-1 bg-[#121622] border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50 min-w-[90px]">
+                          <button
+                            type="button"
+                            onClick={() => { updateRow(row.key, "resolved", false); setActiveDropdown(null); }}
+                            className="w-full text-center px-2 py-1.5 text-[11px] font-bold text-amber-400 hover:bg-white/5 transition-all"
+                          >
+                            Pendente
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => { updateRow(row.key, "resolved", true); setActiveDropdown(null); }}
+                            className="w-full text-center px-2 py-1.5 text-[11px] font-bold text-emerald-400 hover:bg-white/5 transition-all"
+                          >
+                            Resolvido
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    <input type="number" value={row.system_qty} onChange={e => updateRow(row.key, "system_qty", e.target.value)} className={cn(rowField, "px-1 py-1.5 rounded-xl text-center font-mono")} />
+                    <input type="number" value={row.physical_qty} onChange={e => updateRow(row.key, "physical_qty", e.target.value)} className={cn(rowField, "px-1 py-1.5 rounded-xl text-center font-mono")} />
                     <div className="flex justify-end">
                       <button onClick={() => removeRow(row.key)} className="flex items-center justify-center w-8 h-8 rounded-xl text-white/20 hover:text-red-400 hover:bg-red-500/10 transition-all">
                         <Trash2 size={14} />
@@ -1203,72 +1318,9 @@ export default function ValidacoesPage() {
             </div>
           )}
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-
-            <div className={cn("space-y-6 lg:col-span-1 transition-all duration-300", activeTab === "divergences" && "hidden")}>
-              <div className="bg-[#0D1117] border border-white/5 rounded-2xl p-6 shadow-xl space-y-5">
-                <div className="flex justify-between items-center">
-                  <h3 className="text-[11px] font-extrabold text-white uppercase tracking-widest">Acurácia por Empresa</h3>
-                  <span className="text-[9px] font-bold text-white/35 uppercase tracking-widest">2 Unidades</span>
-                </div>
-                <div className="space-y-4">
-                  <div className="bg-[#080B11]/50 border border-white/5 rounded-xl p-4 space-y-2.5">
-                    <div className="flex justify-between items-center">
-                      <span className="text-[11px] font-bold text-white/80 uppercase tracking-widest">Empresa AG</span>
-                      <span className="text-[11px] font-extrabold text-emerald-400">{overallAgAccuracy.toFixed(1)}%</span>
-                    </div>
-                    <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden">
-                      <div className="h-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.3)]" style={{ width: `${overallAgAccuracy}%` }} />
-                    </div>
-                    <div className="flex justify-between text-[9px] font-bold uppercase tracking-widest text-white/30">
-                      <span>Acurácia média AG</span>
-                      <span>{overallAgAccuracy.toFixed(1)}%</span>
-                    </div>
-                  </div>
-                  <div className="bg-[#080B11]/50 border border-white/5 rounded-xl p-4 space-y-2.5">
-                    <div className="flex justify-between items-center">
-                      <span className="text-[11px] font-bold text-white/80 uppercase tracking-widest">Empresa BR</span>
-                      <span className="text-[11px] font-extrabold text-blue-400">{overallBrAccuracy.toFixed(1)}%</span>
-                    </div>
-                    <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden">
-                      <div className="h-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.3)]" style={{ width: `${overallBrAccuracy}%` }} />
-                    </div>
-                    <div className="flex justify-between text-[9px] font-bold uppercase tracking-widest text-white/30">
-                      <span>Acurácia média BR</span>
-                      <span>{overallBrAccuracy.toFixed(1)}%</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {topDivergentPositions.length > 0 && (
-                <div className="bg-[#0D1117] border border-white/5 rounded-2xl p-6 shadow-xl space-y-4">
-                  <div>
-                    <h3 className="text-[11px] font-extrabold text-white uppercase tracking-widest text-red-400">Posições Mais Afetadas</h3>
-                    <p className="text-[9px] text-white/35 font-bold uppercase tracking-wider mt-0.5">Locais com mais Divergências</p>
-                  </div>
-                  <div className="space-y-2">
-                    {topDivergentPositions.map((item, idx) => (
-                      <div key={item.position} className="flex items-center justify-between bg-[#080B11]/60 border border-white/[0.03] rounded-xl px-4 py-3">
-                        <div className="flex items-center gap-3">
-                          <div className="w-6 h-6 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 flex items-center justify-center text-[10px] font-extrabold font-mono">
-                            {idx + 1}
-                          </div>
-                          <span className="text-[11px] font-mono font-bold text-white/80 uppercase">{item.position}</span>
-                        </div>
-                        <span className="text-[10px] font-extrabold bg-red-500/10 text-red-400 border border-red-500/10 px-2.5 py-0.5 rounded-full tabular-nums">
-                          {item.qty} ocorrências
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className={cn("transition-all duration-300", activeTab === "divergences" ? "lg:col-span-3" : "lg:col-span-2")}>
-              <div className="bg-[#0D1117] border border-white/5 rounded-2xl shadow-xl overflow-hidden">
-                <div className="border-b border-white/5 bg-[#080B11]/30 px-6 py-2 flex flex-wrap items-center justify-between gap-4">
+          <div className="w-full">
+            <div className="bg-[#0D1117] border border-white/5 rounded-2xl shadow-xl overflow-hidden">
+              <div className="border-b border-white/5 bg-[#080B11]/30 px-6 py-2 flex flex-wrap items-center justify-between gap-4">
                   <div className="flex gap-4">
                     <button
                       onClick={() => setActiveTab("weeks")}
@@ -1493,8 +1545,6 @@ export default function ValidacoesPage() {
                 )}
               </div>
             </div>
-
-          </div>
         </div>
       </div>
     </>
