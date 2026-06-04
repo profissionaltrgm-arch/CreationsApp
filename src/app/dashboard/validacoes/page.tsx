@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { supabase, supabaseAvarias } from "@/lib/supabase";
 import {
   ArrowLeft, ScanBarcode, AlertTriangle, CheckCircle2, Plus,
-  ChevronRight, X, Trash2, Save, Loader2,
+  ChevronRight, ChevronDown, X, Trash2, Save, Loader2,
   Building2, Percent, ShieldAlert, Pencil
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -29,6 +29,9 @@ interface Divergence {
   physical_qty: number;
   type: string;
   created_at: string;
+  treatment?: string;
+  observation?: string;
+  resolved?: boolean;
 }
 
 interface ValidationSession {
@@ -65,6 +68,9 @@ interface DraftDivergence {
   description: string;
   system_qty: string;
   physical_qty: string;
+  treatment: string;
+  observation: string;
+  resolved: boolean;
 }
 
 function fmtDate(d: string) {
@@ -108,11 +114,11 @@ function NovaValidacaoModal({ onClose, onSaved, descMap }: { onClose: () => void
   }, [weekStart]);
 
   function addRow() {
-    setRows(r => [...r, { key: keyCounter, record_date: today, position: "", company: "AG", code: "", description: "", system_qty: "", physical_qty: "" }]);
+    setRows(r => [...r, { key: keyCounter, record_date: today, position: "", company: "AG", code: "", description: "", system_qty: "", physical_qty: "", treatment: "", observation: "", resolved: false }]);
     setKeyCounter(k => k + 1);
   }
   function removeRow(key: number) { setRows(r => r.filter(x => x.key !== key)); }
-  function updateRow(key: number, field: keyof DraftDivergence, value: string) {
+  function updateRow(key: number, field: keyof DraftDivergence, value: any) {
     setRows(r => r.map(x => x.key === key ? { ...x, [field]: value } : x));
   }
 
@@ -150,7 +156,22 @@ function NovaValidacaoModal({ onClose, onSaved, descMap }: { onClose: () => void
         const toInsert = rows.map(r => {
           const sId = r.company === "AG" ? sessionAgId : sessionBrId;
           if (!sId) throw new Error(`Divergência ${r.company} sem qtd. validada.`);
-          return { session_id: sId, session_date: r.record_date, position: r.position.toUpperCase().trim(), company: r.company, code: r.code.trim(), description: r.description.trim() || null, system_qty: parseInt(r.system_qty) || 0, physical_qty: parseInt(r.physical_qty) || 0, type: validationType };
+          const cleanCode = r.code.trim().toUpperCase();
+          const autoDesc = descMap[cleanCode] || null;
+          return {
+            session_id: sId,
+            session_date: weekStart,
+            position: r.position.toUpperCase().trim(),
+            company: r.company,
+            code: r.code.trim(),
+            description: null,
+            system_qty: parseInt(r.system_qty) || 0,
+            physical_qty: parseInt(r.physical_qty) || 0,
+            type: validationType,
+            treatment: r.treatment || null,
+            observation: r.observation || null,
+            resolved: r.resolved
+          };
         });
         const { error: divErr } = await supabase.from("divergences").insert(toInsert);
         if (divErr) throw new Error(`Erro divergências: ${divErr.message}`);
@@ -240,8 +261,8 @@ function NovaValidacaoModal({ onClose, onSaved, descMap }: { onClose: () => void
 
             <div className="border border-white/5 rounded-2xl overflow-hidden bg-[#07090F]">
               <div className="grid bg-[#0E121C] border-b border-white/5 px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-white/30"
-                style={{ gridTemplateColumns: "115px 125px 85px 105px 1fr 75px 75px 44px" }}>
-                {["Data", "Posição", "Empresa", "Código", "Descrição", "Sistema", "Físico", ""].map(h => (
+                style={{ gridTemplateColumns: "120px 80px 110px 1.5fr 1.5fr 100px 80px 80px 44px" }}>
+                {["Posição", "Empresa", "Código", "Tratamento", "Observação", "Status", "Sistema", "Físico", ""].map(h => (
                   <span key={h} className={cn((h === "Sistema" || h === "Físico") && "text-center")}>{h}</span>
                 ))}
               </div>
@@ -249,8 +270,7 @@ function NovaValidacaoModal({ onClose, onSaved, descMap }: { onClose: () => void
               <div className="max-h-60 overflow-y-auto custom-scrollbar divide-y divide-white/[0.03]">
                 {rows.map(row => (
                   <div key={row.key} className="grid items-center px-4 py-3 hover:bg-white/[0.01] gap-2"
-                    style={{ gridTemplateColumns: "115px 125px 85px 105px 1fr 75px 75px 44px" }}>
-                    <input type="date" value={row.record_date} onChange={e => updateRow(row.key, "record_date", e.target.value)} className={cn(field, "text-[12px] px-2 py-1.5 rounded-xl")} />
+                    style={{ gridTemplateColumns: "120px 80px 110px 1.5fr 1.5fr 100px 80px 80px 44px" }}>
                     <input type="text" value={row.position} placeholder="PK30002A" onChange={e => updateRow(row.key, "position", e.target.value)} className={cn(field, "text-[12px] px-2 py-1.5 rounded-xl font-mono uppercase text-white/80")} />
                     <select value={row.company} onChange={e => updateRow(row.key, "company", e.target.value as Company)} className={cn(field, "text-[12px] px-2 py-1.5 rounded-xl")}>
                       <option value="AG">AG</option>
@@ -270,7 +290,12 @@ function NovaValidacaoModal({ onClose, onSaved, descMap }: { onClose: () => void
                       }}
                       className={cn(field, "text-[12px] px-2 py-1.5 rounded-xl font-mono text-white/80")}
                     />
-                    <input type="text" value={row.description} placeholder="Descrição automática" onChange={e => updateRow(row.key, "description", e.target.value)} className={cn(field, "text-[12px] px-2 py-1.5 rounded-xl text-white/80")} />
+                    <input type="text" value={row.treatment} placeholder="Tratamento..." onChange={e => updateRow(row.key, "treatment", e.target.value)} className={cn(field, "text-[12px] px-2 py-1.5 rounded-xl text-white/80")} />
+                    <input type="text" value={row.observation} placeholder="Observação..." onChange={e => updateRow(row.key, "observation", e.target.value)} className={cn(field, "text-[12px] px-2 py-1.5 rounded-xl text-white/80")} />
+                    <select value={row.resolved ? "true" : "false"} onChange={e => updateRow(row.key, "resolved", e.target.value === "true")} className={cn(field, "text-[12px] px-2 py-1.5 rounded-xl")}>
+                      <option value="false">Pendente</option>
+                      <option value="true">Resolvido</option>
+                    </select>
                     <input type="number" value={row.system_qty} placeholder="0" onChange={e => updateRow(row.key, "system_qty", e.target.value)} className={cn(field, "text-[12px] px-2 py-1.5 rounded-xl text-center font-mono")} />
                     <input type="number" value={row.physical_qty} placeholder="0" onChange={e => updateRow(row.key, "physical_qty", e.target.value)} className={cn(field, "text-[12px] px-2 py-1.5 rounded-xl text-center font-mono")} />
                     <div className="flex justify-end">
@@ -342,6 +367,9 @@ function EditarValidacaoModal({ group, onClose, onSaved, descMap }: {
       description: d.description ?? "",
       system_qty: d.system_qty.toString(),
       physical_qty: d.physical_qty.toString(),
+      treatment: d.treatment ?? "",
+      observation: d.observation ?? "",
+      resolved: d.resolved ?? false,
     }))
   );
   const [saving, setSaving] = useState(false);
@@ -357,11 +385,11 @@ function EditarValidacaoModal({ group, onClose, onSaved, descMap }: {
 
   function addRow() {
     const today = new Date().toISOString().split("T")[0];
-    setRows(r => [...r, { key: keyCounter, record_date: today, position: "", company: "AG", code: "", description: "", system_qty: "", physical_qty: "" }]);
+    setRows(r => [...r, { key: keyCounter, record_date: today, position: "", company: "AG", code: "", description: "", system_qty: "", physical_qty: "", treatment: "", observation: "", resolved: false }]);
     setKeyCounter(k => k + 1);
   }
   function removeRow(key: number) { setRows(r => r.filter(x => x.key !== key)); }
-  function updateRow(key: number, field: keyof DraftDivergence, value: string) {
+  function updateRow(key: number, field: keyof DraftDivergence, value: any) {
     setRows(r => r.map(x => x.key === key ? { ...x, [field]: value } : x));
   }
 
@@ -422,16 +450,21 @@ function EditarValidacaoModal({ group, onClose, onSaved, descMap }: {
         const toInsert = rows.map(r => {
           const sId = r.company === "AG" ? sessionAgId : sessionBrId;
           if (!sId) throw new Error(`Divergência ${r.company} sem sessão correspondente.`);
+          const cleanCode = r.code.trim().toUpperCase();
+          const autoDesc = descMap[cleanCode] || null;
           return {
             session_id: sId,
-            session_date: r.record_date,
+            session_date: weekStart,
             position: r.position.toUpperCase().trim(),
             company: r.company,
             code: r.code.trim(),
-            description: r.description.trim() || null,
+            description: null,
             system_qty: parseInt(r.system_qty) || 0,
             physical_qty: parseInt(r.physical_qty) || 0,
             type: group.type,
+            treatment: r.treatment || null,
+            observation: r.observation || null,
+            resolved: r.resolved
           };
         });
         const { error: insErr } = await supabase.from("divergences").insert(toInsert);
@@ -515,8 +548,8 @@ function EditarValidacaoModal({ group, onClose, onSaved, descMap }: {
 
             <div className="border border-white/5 rounded-2xl overflow-hidden bg-[#07090F]">
               <div className="grid bg-[#0E121C] border-b border-white/5 px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-white/30"
-                style={{ gridTemplateColumns: "115px 125px 85px 105px 1fr 75px 75px 44px" }}>
-                {["Data", "Posição", "Empresa", "Código", "Descrição", "Sistema", "Físico", ""].map(h => (
+                style={{ gridTemplateColumns: "120px 80px 110px 1.5fr 1.5fr 100px 80px 80px 44px" }}>
+                {["Posição", "Empresa", "Código", "Tratamento", "Observação", "Status", "Sistema", "Físico", ""].map(h => (
                   <span key={h} className={cn((h === "Sistema" || h === "Físico") && "text-center")}>{h}</span>
                 ))}
               </div>
@@ -524,8 +557,7 @@ function EditarValidacaoModal({ group, onClose, onSaved, descMap }: {
               <div className="max-h-60 overflow-y-auto custom-scrollbar divide-y divide-white/[0.03]">
                 {rows.map(row => (
                   <div key={row.key} className="grid items-center px-4 py-3 hover:bg-white/[0.01] gap-2"
-                    style={{ gridTemplateColumns: "115px 125px 85px 105px 1fr 75px 75px 44px" }}>
-                    <input type="date" value={row.record_date} onChange={e => updateRow(row.key, "record_date", e.target.value)} className={cn(field, "text-[12px] px-2 py-1.5 rounded-xl")} />
+                    style={{ gridTemplateColumns: "120px 80px 110px 1.5fr 1.5fr 100px 80px 80px 44px" }}>
                     <input type="text" value={row.position} onChange={e => updateRow(row.key, "position", e.target.value)} className={cn(field, "text-[12px] px-2 py-1.5 rounded-xl font-mono uppercase text-white/80")} />
                     <select value={row.company} onChange={e => updateRow(row.key, "company", e.target.value as Company)} className={cn(field, "text-[12px] px-2 py-1.5 rounded-xl")}>
                       <option value="AG">AG</option>
@@ -542,7 +574,12 @@ function EditarValidacaoModal({ group, onClose, onSaved, descMap }: {
                       }}
                       className={cn(field, "text-[12px] px-2 py-1.5 rounded-xl font-mono text-white/80")}
                     />
-                    <input type="text" value={row.description} onChange={e => updateRow(row.key, "description", e.target.value)} className={cn(field, "text-[12px] px-2 py-1.5 rounded-xl text-white/80")} />
+                    <input type="text" value={row.treatment} placeholder="Tratamento..." onChange={e => updateRow(row.key, "treatment", e.target.value)} className={cn(field, "text-[12px] px-2 py-1.5 rounded-xl text-white/80")} />
+                    <input type="text" value={row.observation} placeholder="Observação..." onChange={e => updateRow(row.key, "observation", e.target.value)} className={cn(field, "text-[12px] px-2 py-1.5 rounded-xl text-white/80")} />
+                    <select value={row.resolved ? "true" : "false"} onChange={e => updateRow(row.key, "resolved", e.target.value === "true")} className={cn(field, "text-[12px] px-2 py-1.5 rounded-xl")}>
+                      <option value="false">Pendente</option>
+                      <option value="true">Resolvido</option>
+                    </select>
                     <input type="number" value={row.system_qty} onChange={e => updateRow(row.key, "system_qty", e.target.value)} className={cn(field, "text-[12px] px-2 py-1.5 rounded-xl text-center font-mono")} />
                     <input type="number" value={row.physical_qty} onChange={e => updateRow(row.key, "physical_qty", e.target.value)} className={cn(field, "text-[12px] px-2 py-1.5 rounded-xl text-center font-mono")} />
                     <div className="flex justify-end">
@@ -603,20 +640,33 @@ function DetailView({ v, onBack, descMap }: { v: WeekGroup; onBack: () => void; 
   const DivRow = ({ r }: { r: Divergence }) => {
     const diff = r.physical_qty - r.system_qty;
     const isFalta = diff < 0;
-    const desc = r.description || descMap[r.code?.trim().toUpperCase()] || descMap[r.code] || "";
+    const desc = descMap[r.code?.trim().toUpperCase()] || descMap[r.code] || "";
     return (
-      <tr className="border-b border-white/[0.03] last:border-0 hover:bg-white/[0.01] transition-colors">
-        <td className="px-6 py-4 font-mono text-[12px] text-white/50">{r.position}</td>
-        <td className="px-6 py-4 font-mono text-[12px] text-white/80 font-bold">{r.code}</td>
-        <td className="px-6 py-4 text-[12px] text-white/45 max-w-[260px] truncate">{desc || <span className="text-white/20">—</span>}</td>
-        <td className="px-6 py-4 text-[12px] text-white/60 text-right tabular-nums font-mono">{r.system_qty}</td>
-        <td className="px-6 py-4 text-[12px] text-white/60 text-right tabular-nums font-mono">{r.physical_qty}</td>
-        <td className={cn("px-6 py-4 text-[12px] font-extrabold text-right tabular-nums font-mono", isFalta ? "text-red-400" : "text-amber-400")}>
+      <tr className="border-b border-white/[0.03] hover:bg-white/[0.01] transition-colors align-top">
+        <td className="px-3 py-2.5 font-mono text-[11px] text-white/50 whitespace-nowrap">{r.position}</td>
+        <td className="px-3 py-2.5 font-mono text-[11px] text-white/80 font-bold whitespace-nowrap">{r.code}</td>
+        <td className="px-3 py-2.5 text-[11px] text-white/45 leading-snug" title={desc}>
+          {desc || <span className="text-white/20">—</span>}
+        </td>
+        <td className="px-3 py-2.5 text-[11px] text-white/70 leading-snug">
+          {r.treatment || <span className="text-white/20">—</span>}
+        </td>
+        <td className="px-3 py-2.5 whitespace-nowrap">
+          {r.resolved ? (
+            <span className="text-[9px] font-extrabold uppercase tracking-widest text-emerald-400 border border-emerald-500/20 bg-emerald-500/5 px-2 py-0.5 rounded-full">Resolvido</span>
+          ) : (
+            <span className="text-[9px] font-extrabold uppercase tracking-widest text-amber-500 border border-amber-500/20 bg-amber-500/5 px-2 py-0.5 rounded-full">Pendente</span>
+          )}
+        </td>
+        <td className="px-3 py-2.5 text-[11px] text-white/60 text-right tabular-nums font-mono whitespace-nowrap">{r.system_qty}</td>
+        <td className="px-3 py-2.5 text-[11px] text-white/60 text-right tabular-nums font-mono whitespace-nowrap">{r.physical_qty}</td>
+        <td className={cn("px-3 py-2.5 text-[11px] font-extrabold text-right tabular-nums font-mono whitespace-nowrap", isFalta ? "text-red-400" : "text-amber-400")}>
           {diff > 0 ? `+${diff}` : diff}
         </td>
       </tr>
     );
   };
+
 
   return (
     <div className="w-full max-w-full px-6 md:px-10 lg:px-14 py-8 mx-auto space-y-6">
@@ -680,11 +730,21 @@ function DetailView({ v, onBack, descMap }: { v: WeekGroup; onBack: () => void; 
 
         <div className="bg-[#0D1117] border border-white/5 rounded-2xl overflow-hidden shadow-xl">
           <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
+            <table className="w-full border-collapse" style={{ tableLayout: 'fixed', minWidth: '820px' }}>
+              <colgroup>
+                <col style={{ width: '110px' }} />
+                <col style={{ width: '85px' }} />
+                <col style={{ width: '190px' }} />
+                <col style={{ width: '180px' }} />
+                <col style={{ width: '90px' }} />
+                <col style={{ width: '55px' }} />
+                <col style={{ width: '55px' }} />
+                <col style={{ width: '55px' }} />
+              </colgroup>
               <thead>
                 <tr className="border-b border-white/5 bg-[#080B11]">
-                  {["Posição", "Código", "Descrição", "Sistema", "Físico", "Diferença"].map(h => (
-                    <th key={h} className={cn("px-6 py-4 text-[10px] font-bold uppercase tracking-widest text-white/35 text-left",
+                  {["Posição", "Código", "Descrição", "Tratamento", "Status", "Sistema", "Físico", "Diferença"].map(h => (
+                    <th key={h} className={cn("px-3 py-3 text-[9px] font-bold uppercase tracking-widest text-white/35 text-left",
                       (h === "Sistema" || h === "Físico" || h === "Diferença") && "text-right")}>
                       {h}
                     </th>
@@ -695,7 +755,7 @@ function DetailView({ v, onBack, descMap }: { v: WeekGroup; onBack: () => void; 
                 {agDivs.length > 0 && (
                   <>
                     <tr className="bg-emerald-500/[0.02]">
-                      <td colSpan={6} className="px-6 py-2.5 text-[10px] font-bold uppercase tracking-widest text-emerald-400 border-b border-white/5 border-t border-white/5">
+                      <td colSpan={8} className="px-6 py-2.5 text-[10px] font-bold uppercase tracking-widest text-emerald-400 border-b border-white/5 border-t border-white/5">
                         Divisão: Empresa AG
                       </td>
                     </tr>
@@ -705,7 +765,7 @@ function DetailView({ v, onBack, descMap }: { v: WeekGroup; onBack: () => void; 
                 {brDivs.length > 0 && (
                   <>
                     <tr className="bg-blue-500/[0.02]">
-                      <td colSpan={6} className="px-6 py-2.5 text-[10px] font-bold uppercase tracking-widest text-blue-400 border-b border-white/5 border-t border-white/5">
+                      <td colSpan={8} className="px-6 py-2.5 text-[10px] font-bold uppercase tracking-widest text-blue-400 border-b border-white/5 border-t border-white/5">
                         Divisão: Empresa BR
                       </td>
                     </tr>
@@ -714,7 +774,7 @@ function DetailView({ v, onBack, descMap }: { v: WeekGroup; onBack: () => void; 
                 )}
                 {v.divergences.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="px-6 py-16 text-center text-[12px] text-white/20 font-bold uppercase tracking-wider">
+                    <td colSpan={8} className="px-6 py-16 text-center text-[12px] text-white/20 font-bold uppercase tracking-wider">
                       ✓ Acurácia absoluta de 100% · Sem divergências
                     </td>
                   </tr>
@@ -744,6 +804,181 @@ function DetailView({ v, onBack, descMap }: { v: WeekGroup; onBack: () => void; 
   );
 }
 
+interface DivergenceWithWeek extends Divergence {
+  week_number: number;
+  year: number;
+}
+
+interface ConsolidatedGroup {
+  key: string;
+  position: string;
+  code: string;
+  resolved: boolean;
+  treatment: string;
+  observation: string;
+  company: Company;
+  items: DivergenceWithWeek[];
+}
+
+// ─── Editar Tratativa Modal ──────────────────────────────────────────────────
+function EditarTratativaModal({
+  group,
+  onClose,
+  onSaved
+}: {
+  group: ConsolidatedGroup;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const [treatment, setTreatment] = useState(group.treatment);
+  const [observation, setObservation] = useState(group.observation);
+  const [resolved, setResolved] = useState(group.resolved);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+  const [statusOpen, setStatusOpen] = useState(false);
+
+  async function handleSave() {
+    setSaving(true);
+    setError("");
+    try {
+      const ids = group.items.map(i => i.id);
+      if (ids.length > 0) {
+        const { error: err } = await supabase
+          .from("divergences")
+          .update({
+            treatment: treatment.trim() || null,
+            observation: observation.trim() || null,
+            resolved: resolved
+          })
+          .in("id", ids);
+        if (err) throw err;
+      }
+      onSaved();
+      onClose();
+    } catch (err: unknown) {
+      setError((err as Error).message || "Erro ao salvar tratativa.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const field = "w-full bg-[#121622] border border-white/5 rounded-2xl px-4 py-3 text-[13px] text-white/90 outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all placeholder:text-white/20";
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+      <div className="bg-[#0A0D14] border border-white/10 rounded-[28px] w-full max-w-lg shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
+        <div className="flex items-center justify-between px-8 py-6 border-b border-white/5 bg-[#07090F]">
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
+              <Pencil size={18} className="text-blue-400" />
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-white uppercase tracking-wider">Editar Tratativa</h3>
+              <p className="text-[11px] text-white/40 mt-0.5 font-medium tracking-wide">Atualizar status e ações da divergência</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="p-2 rounded-xl text-white/30 hover:text-white/85 hover:bg-white/5 transition-colors"><X size={18} /></button>
+        </div>
+
+        <div className="p-8 space-y-5">
+          <div className="grid grid-cols-2 gap-4 bg-[#0E121C] border border-white/5 rounded-2xl p-4">
+            <div>
+              <span className="block text-[10px] uppercase tracking-wider text-white/40 mb-1">Posição</span>
+              <span className="text-[13px] font-bold font-mono text-white/80">{group.position}</span>
+            </div>
+            <div>
+              <span className="block text-[10px] uppercase tracking-wider text-white/40 mb-1">Código</span>
+              <span className="text-[13px] font-bold font-mono text-white/80">{group.code}</span>
+            </div>
+            <div className="col-span-2 mt-2 pt-2 border-t border-white/5">
+              <span className="block text-[10px] uppercase tracking-wider text-white/40 mb-1">Semanas Afetadas</span>
+              <span className="text-[11px] font-semibold text-blue-400/80">
+                {group.items.map(i => `Semana ${i.week_number} (${i.company})`).join(", ")}
+              </span>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-[10px] font-semibold uppercase tracking-wider text-white/40 mb-2">Tratamento / Ação</label>
+            <input type="text" value={treatment} onChange={e => setTreatment(e.target.value)} placeholder="Ex: Ajuste de estoque realizado" className={field} />
+          </div>
+
+          <div>
+            <label className="block text-[10px] font-semibold uppercase tracking-wider text-white/40 mb-2">Observações</label>
+            <input type="text" value={observation} onChange={e => setObservation(e.target.value)} placeholder="Ex: Produto foi recontado" className={field} />
+          </div>
+
+          <div>
+            <label className="block text-[10px] font-semibold uppercase tracking-wider text-white/40 mb-2">Status</label>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setStatusOpen(o => !o)}
+                className="w-full bg-[#121622] border border-white/5 rounded-2xl px-4 py-3 text-[13px] outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/30 transition-all flex items-center justify-between gap-3 hover:border-white/10"
+              >
+                <div className="flex items-center gap-2.5">
+                  {resolved ? (
+                    <>
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.6)]" />
+                      <span className="text-emerald-400 font-bold">Resolvido</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.6)]" />
+                      <span className="text-amber-400 font-bold">Pendente</span>
+                    </>
+                  )}
+                </div>
+                <ChevronDown size={14} className={cn("text-white/30 transition-transform duration-200", statusOpen && "rotate-180")} />
+              </button>
+
+              {statusOpen && (
+                <div className="absolute top-full left-0 right-0 mt-1.5 bg-[#121622] border border-white/10 rounded-2xl shadow-2xl overflow-hidden z-50">
+                  <button
+                    type="button"
+                    onClick={() => { setResolved(false); setStatusOpen(false); }}
+                    className={cn(
+                      "w-full flex items-center gap-3 px-4 py-3.5 text-[13px] font-bold transition-all hover:bg-white/5",
+                      !resolved ? "bg-amber-500/10 text-amber-400" : "text-white/50"
+                    )}
+                  >
+                    <span className="w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.5)]" />
+                    Pendente
+                    {!resolved && <span className="ml-auto text-[10px] font-extrabold uppercase tracking-widest text-amber-400/60">Atual</span>}
+                  </button>
+                  <div className="h-px bg-white/5" />
+                  <button
+                    type="button"
+                    onClick={() => { setResolved(true); setStatusOpen(false); }}
+                    className={cn(
+                      "w-full flex items-center gap-3 px-4 py-3.5 text-[13px] font-bold transition-all hover:bg-white/5",
+                      resolved ? "bg-emerald-500/10 text-emerald-400" : "text-white/50"
+                    )}
+                  >
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.5)]" />
+                    Resolvido
+                    {resolved && <span className="ml-auto text-[10px] font-extrabold uppercase tracking-widest text-emerald-400/60">Atual</span>}
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {error && <p className="text-red-400 text-[12px] font-bold bg-red-500/8 border border-red-500/15 rounded-2xl px-5 py-4">{error}</p>}
+        </div>
+
+        <div className="flex items-center justify-end gap-3 px-8 py-6 border-t border-white/5 bg-[#07090F]">
+          <button onClick={onClose} className="px-5 py-2.5 rounded-xl text-[12px] font-bold uppercase tracking-wider text-white/40 hover:text-white/70 hover:bg-white/5 transition-all">Cancelar</button>
+          <button onClick={handleSave} disabled={saving} className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-[12px] font-bold uppercase tracking-wider transition-all disabled:opacity-50">
+            {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
+            {saving ? "Salvando..." : "Salvar Tratativa"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function ValidacoesPage() {
   const router = useRouter();
@@ -754,14 +989,17 @@ export default function ValidacoesPage() {
   const [showModal, setShowModal] = useState(false);
   const [editingGroup, setEditingGroup] = useState<WeekGroup | null>(null);
   const [descMap, setDescMap] = useState<Record<string, string>>({});
+  const [activeTab, setActiveTab] = useState<"weeks" | "divergences">("weeks");
+  const [editingTratativa, setEditingTratativa] = useState<ConsolidatedGroup | null>(null);
 
   const fetchDescriptions = useCallback(async () => {
-    const { data } = await supabaseAvarias.from("base_codigos").select("Código, Descrição");
+    const { data, error } = await supabase.from("base_codigos").select("code, description");
+    console.log("fetchDescriptions data:", data, "error:", error);
     if (data) {
       const map: Record<string, string> = {};
       data.forEach((item: any) => {
-        const code = item["Código"]?.trim().toUpperCase();
-        const desc = item["Descrição"];
+        const code = item["code"]?.trim().toUpperCase();
+        const desc = item["description"];
         if (code && desc) map[code] = desc;
       });
       setDescMap(map);
@@ -852,6 +1090,43 @@ export default function ValidacoesPage() {
     .sort((a, b) => b.qty - a.qty)
     .slice(0, 3);
 
+  const allDivergencesList: DivergenceWithWeek[] = [];
+  weekGroups.forEach(g => {
+    g.divergences.forEach(d => {
+      allDivergencesList.push({
+        ...d,
+        week_number: g.week_number,
+        year: g.year
+      });
+    });
+  });
+
+  const consolidatedMap: Record<string, ConsolidatedGroup> = {};
+  allDivergencesList.forEach(d => {
+    const isResolved = d.resolved ?? false;
+    const groupKey = `${d.position?.toUpperCase().trim()}_${d.code?.toUpperCase().trim()}_${isResolved}`;
+    if (!consolidatedMap[groupKey]) {
+      consolidatedMap[groupKey] = {
+        key: groupKey,
+        position: d.position,
+        code: d.code,
+        resolved: isResolved,
+        treatment: d.treatment ?? "",
+        observation: d.observation ?? "",
+        company: d.company,
+        items: []
+      };
+    }
+    consolidatedMap[groupKey].items.push(d);
+  });
+
+  const consolidatedList = Object.values(consolidatedMap).sort((a, b) => {
+    if (a.resolved !== b.resolved) {
+      return a.resolved ? 1 : -1;
+    }
+    return a.position.localeCompare(b.position);
+  });
+
   return (
     <>
       {showModal && <NovaValidacaoModal onClose={() => setShowModal(false)} onSaved={fetchValidations} descMap={descMap} />}
@@ -861,6 +1136,13 @@ export default function ValidacoesPage() {
           onClose={() => setEditingGroup(null)}
           onSaved={fetchValidations}
           descMap={descMap}
+        />
+      )}
+      {editingTratativa && (
+        <EditarTratativaModal
+          group={editingTratativa}
+          onClose={() => setEditingTratativa(null)}
+          onSaved={fetchValidations}
         />
       )}
 
@@ -925,7 +1207,7 @@ export default function ValidacoesPage() {
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
 
-            <div className="space-y-6 lg:col-span-1">
+            <div className={cn("space-y-6 lg:col-span-1 transition-all duration-300", activeTab === "divergences" && "hidden")}>
               <div className="bg-[#0D1117] border border-white/5 rounded-2xl p-6 shadow-xl space-y-5">
                 <div className="flex justify-between items-center">
                   <h3 className="text-[11px] font-extrabold text-white uppercase tracking-widest">Acurácia por Empresa</h3>
@@ -986,14 +1268,32 @@ export default function ValidacoesPage() {
               )}
             </div>
 
-            <div className="lg:col-span-2">
+            <div className={cn("transition-all duration-300", activeTab === "divergences" ? "lg:col-span-3" : "lg:col-span-2")}>
               <div className="bg-[#0D1117] border border-white/5 rounded-2xl shadow-xl overflow-hidden">
-                <div className="px-6 py-5 border-b border-white/5 bg-[#080B11]/30 flex flex-wrap items-center justify-between gap-4">
-                  <div>
-                    <h2 className="text-[12px] font-extrabold text-white uppercase tracking-widest">Histórico das Validações</h2>
-                    <p className="text-[11px] text-white/35 font-medium mt-1">Clique em uma linha para ver o detalhamento completo.</p>
+                <div className="border-b border-white/5 bg-[#080B11]/30 px-6 py-2 flex flex-wrap items-center justify-between gap-4">
+                  <div className="flex gap-4">
+                    <button
+                      onClick={() => setActiveTab("weeks")}
+                      className={cn(
+                        "py-4 text-[11px] font-extrabold uppercase tracking-widest border-b-2 transition-all outline-none",
+                        activeTab === "weeks" ? "border-blue-500 text-blue-400" : "border-transparent text-white/40 hover:text-white/70"
+                      )}
+                    >
+                      Histórico por Semana
+                    </button>
+                    <button
+                      onClick={() => setActiveTab("divergences")}
+                      className={cn(
+                        "py-4 text-[11px] font-extrabold uppercase tracking-widest border-b-2 transition-all outline-none",
+                        activeTab === "divergences" ? "border-blue-500 text-blue-400" : "border-transparent text-white/40 hover:text-white/70"
+                      )}
+                    >
+                      Painel de Divergências
+                    </button>
                   </div>
-                  <span className="text-[10px] font-bold text-white/30 uppercase tracking-widest bg-white/5 px-3 py-1 rounded-full">{weekGroups.length} semanas</span>
+                  <span className="text-[10px] font-bold text-white/30 uppercase tracking-widest bg-white/5 px-3 py-1 rounded-full">
+                    {activeTab === "weeks" ? `${weekGroups.length} semanas` : `${consolidatedList.length} itens`}
+                  </span>
                 </div>
 
                 {loading ? (
@@ -1010,7 +1310,7 @@ export default function ValidacoesPage() {
                       <Plus size={14} /> Registrar Auditoria
                     </button>
                   </div>
-                ) : (
+                ) : activeTab === "weeks" ? (
                   <div className="overflow-x-auto">
                     <table className="w-full border-collapse">
                       <thead>
@@ -1110,6 +1410,85 @@ export default function ValidacoesPage() {
                             </tr>
                           );
                         })}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full border-collapse" style={{ tableLayout: 'fixed', minWidth: '900px' }}>
+                      <colgroup>
+                        <col style={{ width: '90px' }} />
+                        <col style={{ width: '100px' }} />
+                        <col style={{ width: '220px' }} />
+                        <col style={{ width: '80px' }} />
+                        <col style={{ width: '220px' }} />
+                        <col style={{ width: '200px' }} />
+                        <col style={{ width: '100px' }} />
+                        <col style={{ width: '48px' }} />
+                      </colgroup>
+                      <thead>
+                        <tr className="border-b border-white/5 bg-[#080B11]/50">
+                          <th className="px-4 py-4 text-left text-[10px] font-bold uppercase tracking-widest text-white/30 whitespace-nowrap">Posição</th>
+                          <th className="px-4 py-4 text-left text-[10px] font-bold uppercase tracking-widest text-white/30 whitespace-nowrap">Código</th>
+                          <th className="px-4 py-4 text-left text-[10px] font-bold uppercase tracking-widest text-white/30 whitespace-nowrap">Descrição</th>
+                          <th className="px-4 py-4 text-center text-[10px] font-bold uppercase tracking-widest text-white/30 whitespace-nowrap">Empresa</th>
+                          <th className="px-4 py-4 text-left text-[10px] font-bold uppercase tracking-widest text-white/30 whitespace-nowrap">Semanas</th>
+                          <th className="px-4 py-4 text-left text-[10px] font-bold uppercase tracking-widest text-white/30 whitespace-nowrap">Tratamento</th>
+                          <th className="px-4 py-4 text-center text-[10px] font-bold uppercase tracking-widest text-white/30 whitespace-nowrap">Status</th>
+                          <th className="px-4 py-4"></th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-white/[0.03]">
+                        {consolidatedList.map(group => {
+                          const desc = descMap[group.code?.trim().toUpperCase()] || descMap[group.code] || "";
+                          const uniqueWeeks = Array.from(new Set(group.items.map(i => i.week_number))).sort((a, b) => a - b);
+                          
+                          return (
+                            <tr key={group.key} className="hover:bg-white/[0.01] transition-all">
+                              <td className="px-4 py-3 font-mono text-[12px] text-white/50 whitespace-nowrap overflow-hidden text-ellipsis">{group.position}</td>
+                              <td className="px-4 py-3 font-mono text-[12px] text-white/80 font-bold whitespace-nowrap overflow-hidden text-ellipsis">{group.code}</td>
+                              <td className="px-4 py-3 text-[12px] text-white/45 overflow-hidden text-ellipsis whitespace-nowrap" title={desc}>{desc || <span className="text-white/20">—</span>}</td>
+                              <td className="px-4 py-3 text-center text-[12px] font-bold text-white/60 whitespace-nowrap">{group.company}</td>
+                              <td className="px-4 py-3">
+                                <div className="flex flex-wrap gap-1">
+                                  {uniqueWeeks.map(w => (
+                                    <span key={w} className="text-[9px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20 px-1.5 py-0.5 rounded-full whitespace-nowrap">
+                                      S{w}
+                                    </span>
+                                  ))}
+                                </div>
+                              </td>
+                              <td className="px-4 py-3 text-[12px] text-white/70 overflow-hidden text-ellipsis whitespace-nowrap" title={group.treatment || ''}>{group.treatment || <span className="text-white/20">—</span>}</td>
+                              <td className="px-4 py-3 text-center">
+                                {group.resolved ? (
+                                  <span className="text-[9px] font-extrabold uppercase tracking-widest text-emerald-400 border border-emerald-500/20 bg-emerald-500/5 px-2 py-1 rounded-full whitespace-nowrap">
+                                    Resolvido
+                                  </span>
+                                ) : (
+                                  <span className="text-[9px] font-extrabold uppercase tracking-widest text-amber-500 border border-amber-500/20 bg-amber-500/5 px-2 py-1 rounded-full whitespace-nowrap">
+                                    Pendente
+                                  </span>
+                                )}
+                              </td>
+                              <td className="px-2 py-3 text-right">
+                                <button
+                                  onClick={() => setEditingTratativa(group)}
+                                  className="p-1.5 rounded-xl text-white/10 hover:text-blue-400 hover:bg-blue-500/10 transition-all"
+                                  title="Editar tratativa"
+                                >
+                                  <Pencil size={13} />
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                        {consolidatedList.length === 0 && (
+                          <tr>
+                            <td colSpan={8} className="px-6 py-16 text-center text-[12px] text-white/20 font-bold uppercase tracking-wider">
+                              ✓ Nenhuma divergência registrada
+                            </td>
+                          </tr>
+                        )}
                       </tbody>
                     </table>
                   </div>
