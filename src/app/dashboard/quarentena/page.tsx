@@ -15,7 +15,7 @@ interface QuarantineItem {
   code: string;
   quantity: number;
   company: string;
-  observations: string;
+  observation: string;
   resolved: boolean;
 }
 
@@ -83,7 +83,7 @@ export default function QuarentenaPage() {
       const matchSearch =
         item.code?.toLowerCase().includes(q) ||
         desc.toLowerCase().includes(q) ||
-        (item.observations ?? "").toLowerCase().includes(q);
+        (item.observation ?? "").toLowerCase().includes(q);
       const matchCompany =
         companyFilter === "Todas" ||
         (item.company ?? "").toUpperCase() === companyFilter.toUpperCase();
@@ -384,7 +384,7 @@ export default function QuarentenaPage() {
                       {/* Observações */}
                       <td className="px-5 py-3.5 border-b border-white/[0.025] max-w-[340px]">
                         <span className="text-[11px] text-gray-500 group-hover:text-gray-300 transition-colors leading-relaxed block">
-                          {item.observations ?? "—"}
+                          {item.observation ?? "—"}
                         </span>
                       </td>
 
@@ -395,24 +395,24 @@ export default function QuarentenaPage() {
                             onClick={() => toggleResolved(item)}
                             disabled={!isAdmin || isUpdating}
                             className={cn(
-                              "relative inline-flex h-5 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none",
-                              item.resolved ? "bg-emerald-500" : "bg-red-500",
+                              "relative inline-flex h-6 w-12 shrink-0 cursor-pointer rounded-full p-0.5 transition-colors duration-200 ease-in-out focus:outline-none",
+                              item.resolved ? "bg-[#00c875]" : "bg-[#1a2333] border border-white/10",
                               (!isAdmin || isUpdating) && "cursor-not-allowed opacity-50"
                             )}
                           >
                             <span
                               className={cn(
-                                "pointer-events-none inline-flex h-4 w-4 transform items-center justify-center rounded-full bg-white text-[8px] font-black shadow transition duration-200 ease-in-out",
-                                item.resolved ? "translate-x-6 text-emerald-600" : "translate-x-0 text-red-600"
+                                "pointer-events-none inline-flex h-5 w-5 transform items-center justify-center rounded-full bg-white transition-transform duration-200 ease-in-out shadow-md",
+                                item.resolved ? "translate-x-6 text-[#00c875]" : "translate-x-0"
                               )}
                             >
                               {isUpdating ? (
-                                <Loader2 size={8} className="animate-spin" />
+                                <Loader2 size={10} className="animate-spin text-gray-400" />
                               ) : item.resolved ? (
-                                "S"
-                              ) : (
-                                "N"
-                              )}
+                                <svg className="h-2.5 w-2.5 fill-current" viewBox="0 0 20 20">
+                                  <path d="M0 11l2-2 5 5L18 3l2 2L7 18z" />
+                                </svg>
+                              ) : null}
                             </span>
                           </button>
                         </div>
