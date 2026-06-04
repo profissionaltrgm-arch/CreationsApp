@@ -99,7 +99,9 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full pl-12 pr-12 py-3.5 rounded-2xl border border-white/5 bg-[#121620]/60 text-sm outline-none focus:border-blue-500/30 transition-all text-white placeholder:text-slate-700 font-medium shadow-inner"
+                  style={{ WebkitTextSecurity: showPassword ? "none" : undefined } as React.CSSProperties}
+                  className="w-full pl-12 pr-12 py-3.5 rounded-2xl border border-white/5 bg-[#121620]/60 text-sm outline-none focus:border-blue-500/30 transition-all text-white placeholder:text-slate-700 font-medium shadow-inner [&::-ms-reveal]:hidden [&::-ms-clear]:hidden"
+
                 />
                 <button
                   type="button"

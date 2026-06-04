@@ -228,6 +228,18 @@ h1, h2, h3, h4 {
   border-color: rgba(248,113,113,0.15);
 }
 
+/* ── Hide native browser password reveal button (Edge/Chrome) ────────────── */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none;
+}
+input[type="password"]::-webkit-credentials-auto-fill-button,
+input[type="password"]::-webkit-strong-password-auto-fill-button {
+  display: none !important;
+  visibility: hidden;
+  pointer-events: none;
+}
+
 /* ── Date picker ─────────────────────────────────────────────────────────── */
 input[type="date"]::-webkit-calendar-picker-indicator {
   filter: invert(0.5) brightness(0.7);
