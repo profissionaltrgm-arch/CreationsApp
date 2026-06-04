@@ -246,28 +246,28 @@ export default function QuarentenaPage() {
                     >
                       {/* Código */}
                       <td className={cn(
-                        "px-4 py-3.5 border-b border-white/[0.02] font-semibold text-xs tracking-wider",
-                        item.isDuplicate && "text-red-400 bg-red-500/[0.03]"
+                        "px-4 py-3.5 border-b border-white/[0.02] text-xs tracking-wider text-white/90",
+                        item.isDuplicate && "text-red-400 bg-red-950/20"
                       )}>
                         {item.code ?? "—"}
                       </td>
 
                       {/* Descrição */}
-                      <td className="px-4 py-3.5 border-b border-white/[0.02] text-xs text-gray-300 max-w-[280px]">
+                      <td className="px-4 py-3.5 border-b border-white/[0.02] text-xs text-gray-400 max-w-[280px]">
                         <span className="line-clamp-2 leading-relaxed">
                           {desc}
                         </span>
                       </td>
 
                       {/* Quantidade */}
-                      <td className="px-4 py-3.5 border-b border-white/[0.02] font-bold text-sm text-white">
+                      <td className="px-4 py-3.5 border-b border-white/[0.02] text-xs text-white/90">
                         {(item.quantity ?? 0).toLocaleString("pt-BR")}
                       </td>
 
                       {/* Tipo / Empresa */}
-                      <td className="px-4 py-3.5 border-b border-white/[0.02] text-xs font-semibold">
+                      <td className="px-4 py-3.5 border-b border-white/[0.02] text-xs">
                         <span className={cn(
-                          "px-2 py-0.5 rounded border text-[9px] font-bold uppercase",
+                          "px-2 py-0.5 rounded border text-[9px] uppercase",
                           isAG
                             ? "bg-purple-500/10 border-purple-500/20 text-purple-400"
                             : "bg-blue-500/10 border-blue-500/20 text-blue-400"
@@ -290,24 +290,20 @@ export default function QuarentenaPage() {
                             onClick={() => toggleResolved(item)}
                             disabled={!isAdmin || isUpdating}
                             className={cn(
-                              "relative inline-flex h-6 w-12 shrink-0 cursor-pointer rounded-full p-0.5 transition-colors duration-200 ease-in-out focus:outline-none",
-                              item.resolved ? "bg-[#00c875]" : "bg-[#1e293b] border border-white/5",
+                              "relative inline-flex h-5 w-10 shrink-0 cursor-pointer rounded-full p-0.5 transition-colors duration-200 ease-in-out focus:outline-none",
+                              item.resolved ? "bg-emerald-500/80" : "bg-[#1e293b] border border-white/5",
                               (!isAdmin || isUpdating) && "cursor-not-allowed opacity-50"
                             )}
                           >
                             <span
                               className={cn(
-                                "pointer-events-none inline-flex h-5 w-5 transform items-center justify-center rounded-full bg-white transition-transform duration-200 ease-in-out shadow-sm",
-                                item.resolved ? "translate-x-6 text-[#00c875]" : "translate-x-0"
+                                "pointer-events-none inline-flex h-4 w-4 transform items-center justify-center rounded-full bg-white transition-transform duration-200 ease-in-out shadow-sm",
+                                item.resolved ? "translate-x-5" : "translate-x-0"
                               )}
                             >
-                              {isUpdating ? (
-                                <Loader2 size={10} className="animate-spin text-gray-400" />
-                              ) : item.resolved ? (
-                                <svg className="h-2.5 w-2.5 fill-current" viewBox="0 0 20 20">
-                                  <path d="M0 11l2-2 5 5L18 3l2 2L7 18z" />
-                                </svg>
-                              ) : null}
+                              {isUpdating && (
+                                <Loader2 size={8} className="animate-spin text-gray-400" />
+                              )}
                             </span>
                           </button>
                         </div>
