@@ -167,8 +167,24 @@ function ShareCard({
   descMap: Record<string, string>;
 }) {
   const pending  = items.filter((i) => !i.resolved);
-  const resolved = items.filter((i) =>  i.resolved);
   const now      = new Date().toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
+
+  const groups = [
+    {
+      label: "BR",
+      color: "#34d399",
+      bg: "rgba(16,185,129,0.06)",
+      border: "rgba(16,185,129,0.15)",
+      items: pending.filter((i) => (i.company ?? "").toUpperCase() === "BR").sort((a, b) => (a.code ?? "").localeCompare(b.code ?? "")),
+    },
+    {
+      label: "AG",
+      color: "#60a5fa",
+      bg: "rgba(96,165,250,0.06)",
+      border: "rgba(96,165,250,0.15)",
+      items: pending.filter((i) => (i.company ?? "").toUpperCase() === "AG").sort((a, b) => (a.code ?? "").localeCompare(b.code ?? "")),
+    },
+  ].filter((g) => g.items.length > 0);
 
   return (
     <div
@@ -200,9 +216,7 @@ function ShareCard({
       {/* Stats row */}
       <div style={{ display: "flex", gap: 12, marginBottom: 28 }}>
         {[
-          { label: "Total", value: items.length,   color: "#e5e7eb" },
-          { label: "Pendentes",  value: pending.length,  color: "#f59e0b" },
-          { label: "Resolvidos", value: resolved.length, color: "#10b981" },
+          { label: "Total em Quarentena", value: items.length, color: "#e5e7eb" },
         ].map((s) => (
           <div key={s.label} style={{
             flex: 1, background: "rgba(255,255,255,0.03)",
@@ -219,32 +233,42 @@ function ShareCard({
         ))}
       </div>
 
-      {/* Pending items list */}
-      {pending.length > 0 && (
-        <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 14, overflow: "hidden" }}>
-          {/* Table header */}
-          <div style={{
-            display: "grid", gridTemplateColumns: "90px 1fr 44px 40px",
-            padding: "10px 16px", borderBottom: "1px solid rgba(255,255,255,0.05)",
-          }}>
-            {["Código", "Observação", "Qtd.", "Tipo"].map((h) => (
-              <span key={h} style={{ fontSize: 9, fontWeight: 700, color: "#4b5563", textTransform: "uppercase", letterSpacing: 1 }}>{h}</span>
-            ))}
+      {/* Groups (BR, AG) */}
+      {groups.map((group) => (
+        <div key={group.label} style={{ marginBottom: 24 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+            <span style={{
+              fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1.5,
+              color: group.color, padding: "2px 10px",
+              background: group.bg, border: `1px solid ${group.border}`,
+              borderRadius: 999,
+            }}>
+              {group.label}
+            </span>
+            <span style={{ fontSize: 10, color: "#4b5563" }}>
+              {group.items.length} {group.items.length === 1 ? "item" : "itens"}
+            </span>
           </div>
-          {/* Rows */}
-          {pending.map((item, i) => {
-            const isAG = (item.company ?? "").toUpperCase() === "AG";
-            return (
+
+          <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 14, overflow: "hidden" }}>
+            {/* Table header */}
+            <div style={{
+              display: "grid", gridTemplateColumns: "100px 1fr 44px",
+              padding: "10px 16px", borderBottom: "1px solid rgba(255,255,255,0.05)",
+            }}>
+              {["Código", "Observação", "Qtd."].map((h) => (
+                <span key={h} style={{ fontSize: 9, fontWeight: 700, color: "#4b5563", textTransform: "uppercase", letterSpacing: 1 }}>{h}</span>
+              ))}
+            </div>
+            {/* Rows */}
+            {group.items.map((item, i) => (
               <div key={item.id} style={{
-                display: "grid", gridTemplateColumns: "90px 1fr 44px 40px",
+                display: "grid", gridTemplateColumns: "100px 1fr 44px",
                 padding: "10px 16px",
-                borderBottom: i < pending.length - 1 ? "1px solid rgba(255,255,255,0.03)" : "none",
+                borderBottom: i < group.items.length - 1 ? "1px solid rgba(255,255,255,0.03)" : "none",
                 background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.01)",
               }}>
-                <span style={{
-                  fontSize: 11, fontFamily: "monospace", color: "#e5e7eb",
-                  ...(item.isDuplicate ? { color: "#f87171" } : {}),
-                }}>
+                <span style={{ fontSize: 11, fontFamily: "monospace", color: "#e5e7eb" }}>
                   {item.code}
                 </span>
                 <span style={{
@@ -256,17 +280,11 @@ function ShareCard({
                   {item.observation || descMap[item.code?.trim().toUpperCase()] || "—"}
                 </span>
                 <span style={{ fontSize: 10, color: "#d1d5db" }}>{item.quantity}</span>
-                <span style={{
-                  fontSize: 9, fontWeight: 700, textTransform: "uppercase",
-                  color: isAG ? "#60a5fa" : "#34d399",
-                }}>
-                  {item.company}
-                </span>
               </div>
-            );
-          })}
+            ))}
+          </div>
         </div>
-      )}
+      ))}
 
       {/* Footer */}
       <div style={{ marginTop: 22, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -451,9 +469,9 @@ export default function QuarentenaPage() {
       {shareOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setShareOpen(false)} />
-          <div className="relative z-10 w-full max-w-2xl mx-4 bg-[#0D1117] border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col">
+          <div className="relative z-10 w-full max-w-2xl max-h-[90vh] mx-4 bg-[#0D1117] border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col">
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-white/5">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 shrink-0">
               <div className="flex items-center gap-2">
                 <Share2 size={14} className="text-blue-400" />
                 <h2 className="text-sm font-semibold text-white tracking-tight">Compartilhar situação</h2>
@@ -464,14 +482,14 @@ export default function QuarentenaPage() {
             </div>
 
             {/* Preview */}
-            <div className="p-6 flex justify-center overflow-auto bg-[#050709]">
-              <div className="scale-[0.75] origin-top">
+            <div className="p-6 bg-[#050709] flex-1 overflow-y-auto flex justify-center items-start min-h-0">
+              <div style={{ zoom: 0.75, display: "flex", justifyContent: "center" }}>
                 <ShareCard cardRef={{ current: null }} items={items} descMap={descMap} />
               </div>
             </div>
 
             {/* Footer */}
-            <div className="px-6 pb-5 pt-3 border-t border-white/5 flex gap-3">
+            <div className="px-6 pb-5 pt-3 border-t border-white/5 flex gap-3 shrink-0">
               <button onClick={() => setShareOpen(false)}
                 className="flex-1 py-2.5 rounded-xl text-xs font-semibold text-gray-400 border border-white/10 hover:bg-white/5 hover:text-white transition-colors">
                 Fechar
