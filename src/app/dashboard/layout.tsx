@@ -1,11 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   Users, 
   LogOut, 
-  Bell,
-  User as UserIcon,
+  LogIn,
   ShieldCheck,
   Calendar,
   Zap,
@@ -13,6 +12,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRouter, usePathname } from "next/navigation";
+import { supabase } from "@/lib/supabase";
 
 export default function DashboardLayout({
   children,
@@ -20,16 +20,51 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const [isHovered, setIsHovered] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [loadingAuth, setLoadingAuth] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
 
+  useEffect(() => {
+    // Check initial auth session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsAdmin(!!session);
+      setLoadingAuth(false);
+    });
+
+    // Subscribe to auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsAdmin(!!session);
+      setLoadingAuth(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
   const menuItems = [
-    { label: "Colaboradores", icon: Users,         href: "/dashboard/employees" },
-    { label: "Planejamento",  icon: CalendarDays,  href: "/dashboard/planning" },
-    { label: "Ausências",     icon: Calendar,      href: "/dashboard/absences" },
-    { label: "Processos",     icon: Zap,           href: "/dashboard/processes" },
-    { label: "Validações",    icon: ShieldCheck,   href: "/dashboard/validacoes" },
+    { label: "Colaboradores", icon: Users,         href: "/dashboard/employees", public: true },
+    { label: "Planejamento",  icon: CalendarDays,  href: "/dashboard/planning",  public: true },
+    { label: "Ausências",     icon: Calendar,      href: "/dashboard/absences",  public: false },
+    { label: "Processos",     icon: Zap,           href: "/dashboard/processes", public: false },
+    { label: "Validações",    icon: ShieldCheck,   href: "/dashboard/validacoes", public: true },
   ];
+
+  // Route guard: if path is private and user is not admin, redirect to public route
+  useEffect(() => {
+    if (!loadingAuth) {
+      const currentItem = menuItems.find(item => item.href === pathname);
+      if (currentItem && !currentItem.public && !isAdmin) {
+        router.push("/dashboard/validacoes");
+      }
+    }
+  }, [pathname, isAdmin, loadingAuth]);
+
+  const visibleMenuItems = menuItems.filter(item => item.public || isAdmin);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push("/dashboard/validacoes");
+  };
 
   return (
     <div
@@ -69,7 +104,7 @@ export default function DashboardLayout({
 
           {/* Navigation */}
           <nav className="flex-1 px-3 py-4 space-y-1.5 overflow-hidden">
-            {menuItems.map((item) => {
+            {visibleMenuItems.map((item) => {
               const isActive = pathname === item.href;
               return (
                 <button
@@ -87,7 +122,7 @@ export default function DashboardLayout({
                     <div className="absolute left-0 top-2 bottom-2 w-[3px] bg-blue-500 rounded-r-full shadow-[0_0_10px_rgba(59,130,246,0.8)]" />
                   )}
 
-                  {/* Icon container - exactly 40px (w-10) to center perfectly in the 40px space when collapsed (64px - 24px padding) */}
+                  {/* Icon container */}
                   <div className="w-10 h-10 shrink-0 flex items-center justify-center">
                     <item.icon
                       size={18}
@@ -116,55 +151,49 @@ export default function DashboardLayout({
 
           {/* Footer */}
           <div className="px-3 pb-4 border-t border-white/[0.04] pt-3">
-            <button
-              onClick={() => router.push("/login")}
-              className="w-full flex items-center h-10 rounded-xl transition-all hover:bg-red-500/10 group overflow-hidden text-gray-500 hover:text-red-400"
-            >
-              <div className="w-10 h-10 shrink-0 flex items-center justify-center">
-                <LogOut size={16} className="transition-colors" />
-              </div>
-              <span
-                className={cn(
-                  "text-[10px] font-bold uppercase tracking-wider whitespace-nowrap transition-all duration-300 pl-1",
-                  isHovered ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-3 pointer-events-none"
-                )}
+            {isAdmin ? (
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center h-10 rounded-xl transition-all hover:bg-red-500/10 group overflow-hidden text-gray-500 hover:text-red-400"
               >
-                Sair
-              </span>
-            </button>
+                <div className="w-10 h-10 shrink-0 flex items-center justify-center">
+                  <LogOut size={16} className="transition-colors" />
+                </div>
+                <span
+                  className={cn(
+                    "text-[10px] font-bold uppercase tracking-wider whitespace-nowrap transition-all duration-300 pl-1",
+                    isHovered ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-3 pointer-events-none"
+                  )}
+                >
+                  Sair
+                </span>
+              </button>
+            ) : (
+              <button
+                onClick={() => router.push("/login")}
+                className="w-full flex items-center h-10 rounded-xl transition-all hover:bg-blue-500/10 group overflow-hidden text-gray-500 hover:text-blue-400"
+              >
+                <div className="w-10 h-10 shrink-0 flex items-center justify-center">
+                  <LogIn size={16} className="transition-colors group-hover:text-blue-400" />
+                </div>
+                <span
+                  className={cn(
+                    "text-[10px] font-bold uppercase tracking-wider whitespace-nowrap transition-all duration-300 pl-1",
+                    isHovered ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-3 pointer-events-none"
+                  )}
+                >
+                  Entrar
+                </span>
+              </button>
+            )}
           </div>
         </aside>
       </div>
 
       {/* ── Main Content ─────────────────────────────────────────────── */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        {/* Header */}
-        <header
-          className="h-16 flex items-center justify-end px-8 shrink-0 border-b border-white/5 z-40"
-          style={{ background: "rgba(5,7,10,0.85)", backdropFilter: "blur(24px)" }}
-        >
-          <div className="flex items-center gap-4">
-            <button className="relative p-2.5 rounded-xl transition-all hover:bg-white/5 text-gray-500 hover:text-white">
-              <Bell size={17} />
-              <span className="absolute top-2.5 right-2.5 w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_6px_rgba(59,130,246,0.7)]" />
-            </button>
-
-            <div className="flex items-center gap-3 pl-4 border-l border-white/[0.06]">
-              <div className="flex flex-col items-end leading-none">
-                <span className="text-[11px] font-black text-white uppercase tracking-tight">Administrador</span>
-                <span className="text-[9px] font-bold text-blue-400/80 uppercase tracking-widest mt-1">Acesso Master</span>
-              </div>
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 p-[1px] shadow-lg shadow-blue-500/10">
-                <div className="w-full h-full rounded-[calc(0.75rem-1px)] bg-[#05070A] flex items-center justify-center text-white">
-                  <UserIcon size={16} />
-                </div>
-              </div>
-            </div>
-          </div>
-        </header>
-
+      <div className="flex-1 min-w-0 overflow-hidden">
         {/* Page content */}
-        <main className="flex-1 overflow-y-auto custom-scrollbar">
+        <main className="h-full overflow-y-auto overflow-x-hidden custom-scrollbar px-6 py-6">
           {children}
         </main>
       </div>

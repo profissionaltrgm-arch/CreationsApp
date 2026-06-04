@@ -205,12 +205,11 @@ function NovaValidacaoModal({ onClose, onSaved, descMap }: { onClose: () => void
         <div className="p-8 space-y-6">
           <div>
             <span className="text-[10px] font-bold text-blue-500/80 uppercase tracking-widest block mb-3">Informações do Período</span>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {[
                 { label: "Nº Semana", value: weekNumber, set: setWeekNumber, type: "number", placeholder: "21" },
                 { label: "Ano", value: year, set: setYear, type: "number", placeholder: "2026" },
                 { label: "Data Início", value: weekStart, set: setWeekStart, type: "date", placeholder: "" },
-                { label: "Data Fim", value: weekEnd, set: setWeekEnd, type: "date", placeholder: "" },
               ].map(f => (
                 <div key={f.label}>
                   <label className="block text-[10px] font-semibold uppercase tracking-wider text-white/40 mb-2">{f.label}</label>
@@ -558,12 +557,11 @@ function EditarValidacaoModal({ group, onClose, onSaved, descMap }: {
         <div className="p-8 space-y-6">
           <div>
             <span className="text-[10px] font-bold text-amber-500/80 uppercase tracking-widest block mb-3">Informações do Período</span>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {[
                 { label: "Nº Semana", value: weekNumber, set: setWeekNumber, type: "number" },
                 { label: "Ano", value: year, set: setYear, type: "number" },
                 { label: "Data Início", value: weekStart, set: setWeekStart, type: "date" },
-                { label: "Data Fim", value: weekEnd, set: setWeekEnd, type: "date" },
               ].map(f => (
                 <div key={f.label}>
                   <label className="block text-[10px] font-semibold uppercase tracking-wider text-white/40 mb-2">{f.label}</label>
@@ -1101,6 +1099,17 @@ export default function ValidacoesPage() {
   const [descMap, setDescMap] = useState<Record<string, string>>({});
   const [activeTab, setActiveTab] = useState<"weeks" | "divergences">("weeks");
   const [editingTratativa, setEditingTratativa] = useState<ConsolidatedGroup | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsAdmin(!!session);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsAdmin(!!session);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
 
   const fetchDescriptions = useCallback(async () => {
     const { data, error } = await supabase.from("base_codigos").select("code, description");
