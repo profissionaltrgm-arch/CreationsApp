@@ -201,10 +201,11 @@ export default function QuarentenaPage() {
           <table className="w-full border-separate border-spacing-0">
             <thead className="sticky top-0 z-10 bg-[#0D1117]">
               <tr className="border-b border-white/5">
-                {["Código", "Descrição do Produto", "Quantidade", "Tipo", "Observações", "Resolvido"].map((h) => (
+                {["Código", "Descrição do Produto", "Qtd.", "Tipo", "Observações", "Resolvido"].map((h) => (
                   <th key={h}
                       className={cn(
-                        "px-4 py-3 text-left text-[10px] font-bold text-gray-500 uppercase tracking-wider border-b border-white/5 whitespace-nowrap",
+                        "text-left text-[10px] font-bold text-gray-500 uppercase tracking-wider border-b border-white/5 whitespace-nowrap",
+                        h === "Qtd." ? "px-2 py-3" : "px-4 py-3",
                         h === "Resolvido" && "text-center"
                       )}>
                     {h}
@@ -260,7 +261,7 @@ export default function QuarentenaPage() {
                       </td>
 
                       {/* Quantidade */}
-                      <td className="px-4 py-3.5 border-b border-white/[0.02] text-xs text-white/90">
+                      <td className="px-2 py-3.5 border-b border-white/[0.02] text-xs text-white/90 text-center whitespace-nowrap">
                         {(item.quantity ?? 0).toLocaleString("pt-BR")}
                       </td>
 
@@ -269,16 +270,16 @@ export default function QuarentenaPage() {
                         <span className={cn(
                           "px-2 py-0.5 rounded border text-[9px] uppercase",
                           isAG
-                            ? "bg-purple-500/10 border-purple-500/20 text-purple-400"
-                            : "bg-blue-500/10 border-blue-500/20 text-blue-400"
+                            ? "bg-blue-500/10 border-blue-500/20 text-blue-400"
+                            : "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
                         )}>
                           {item.company ?? "BR"}
                         </span>
                       </td>
 
                       {/* Observações */}
-                      <td className="px-4 py-3.5 border-b border-white/[0.02] text-xs text-gray-400 max-w-[340px]">
-                        <span className="leading-relaxed block truncate hover:text-clip hover:whitespace-normal">
+                      <td className="px-4 py-3.5 border-b border-white/[0.02] text-xs text-gray-400 w-full">
+                        <span className="leading-relaxed block">
                           {item.observation ?? "—"}
                         </span>
                       </td>
