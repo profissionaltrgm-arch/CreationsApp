@@ -261,8 +261,8 @@ function NovaValidacaoModal({ onClose, onSaved, descMap }: { onClose: () => void
 
             <div className="border border-white/5 rounded-2xl overflow-hidden bg-[#07090F]">
               <div className="grid bg-[#0E121C] border-b border-white/5 px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-white/30"
-                style={{ gridTemplateColumns: "120px 80px 110px 1.5fr 1.5fr 100px 80px 80px 44px" }}>
-                {["Posição", "Empresa", "Código", "Tratamento", "Observação", "Status", "Sistema", "Físico", ""].map(h => (
+                style={{ gridTemplateColumns: "120px 80px 110px 2fr 100px 80px 80px 44px" }}>
+                {["Posição", "Empresa", "Código", "Tratamento", "Status", "Sistema", "Físico", ""].map(h => (
                   <span key={h} className={cn((h === "Sistema" || h === "Físico") && "text-center")}>{h}</span>
                 ))}
               </div>
@@ -270,7 +270,7 @@ function NovaValidacaoModal({ onClose, onSaved, descMap }: { onClose: () => void
               <div className="max-h-60 overflow-y-auto custom-scrollbar divide-y divide-white/[0.03]">
                 {rows.map(row => (
                   <div key={row.key} className="grid items-center px-4 py-3 hover:bg-white/[0.01] gap-2"
-                    style={{ gridTemplateColumns: "120px 80px 110px 1.5fr 1.5fr 100px 80px 80px 44px" }}>
+                    style={{ gridTemplateColumns: "120px 80px 110px 2fr 100px 80px 80px 44px" }}>
                     <input type="text" value={row.position} placeholder="PK30002A" onChange={e => updateRow(row.key, "position", e.target.value)} className={cn(field, "text-[12px] px-2 py-1.5 rounded-xl font-mono uppercase text-white/80")} />
                     <select value={row.company} onChange={e => updateRow(row.key, "company", e.target.value as Company)} className={cn(field, "text-[12px] px-2 py-1.5 rounded-xl")}>
                       <option value="AG">AG</option>
@@ -291,7 +291,6 @@ function NovaValidacaoModal({ onClose, onSaved, descMap }: { onClose: () => void
                       className={cn(field, "text-[12px] px-2 py-1.5 rounded-xl font-mono text-white/80")}
                     />
                     <input type="text" value={row.treatment} placeholder="Tratamento..." onChange={e => updateRow(row.key, "treatment", e.target.value)} className={cn(field, "text-[12px] px-2 py-1.5 rounded-xl text-white/80")} />
-                    <input type="text" value={row.observation} placeholder="Observação..." onChange={e => updateRow(row.key, "observation", e.target.value)} className={cn(field, "text-[12px] px-2 py-1.5 rounded-xl text-white/80")} />
                     <select value={row.resolved ? "true" : "false"} onChange={e => updateRow(row.key, "resolved", e.target.value === "true")} className={cn(field, "text-[12px] px-2 py-1.5 rounded-xl")}>
                       <option value="false">Pendente</option>
                       <option value="true">Resolvido</option>
@@ -548,8 +547,8 @@ function EditarValidacaoModal({ group, onClose, onSaved, descMap }: {
 
             <div className="border border-white/5 rounded-2xl overflow-hidden bg-[#07090F]">
               <div className="grid bg-[#0E121C] border-b border-white/5 px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-white/30"
-                style={{ gridTemplateColumns: "120px 80px 110px 1.5fr 1.5fr 100px 80px 80px 44px" }}>
-                {["Posição", "Empresa", "Código", "Tratamento", "Observação", "Status", "Sistema", "Físico", ""].map(h => (
+                style={{ gridTemplateColumns: "120px 80px 110px 2fr 100px 80px 80px 44px" }}>
+                {["Posição", "Empresa", "Código", "Tratamento", "Status", "Sistema", "Físico", ""].map(h => (
                   <span key={h} className={cn((h === "Sistema" || h === "Físico") && "text-center")}>{h}</span>
                 ))}
               </div>
@@ -557,7 +556,7 @@ function EditarValidacaoModal({ group, onClose, onSaved, descMap }: {
               <div className="max-h-60 overflow-y-auto custom-scrollbar divide-y divide-white/[0.03]">
                 {rows.map(row => (
                   <div key={row.key} className="grid items-center px-4 py-3 hover:bg-white/[0.01] gap-2"
-                    style={{ gridTemplateColumns: "120px 80px 110px 1.5fr 1.5fr 100px 80px 80px 44px" }}>
+                    style={{ gridTemplateColumns: "120px 80px 110px 2fr 100px 80px 80px 44px" }}>
                     <input type="text" value={row.position} onChange={e => updateRow(row.key, "position", e.target.value)} className={cn(field, "text-[12px] px-2 py-1.5 rounded-xl font-mono uppercase text-white/80")} />
                     <select value={row.company} onChange={e => updateRow(row.key, "company", e.target.value as Company)} className={cn(field, "text-[12px] px-2 py-1.5 rounded-xl")}>
                       <option value="AG">AG</option>
@@ -575,7 +574,6 @@ function EditarValidacaoModal({ group, onClose, onSaved, descMap }: {
                       className={cn(field, "text-[12px] px-2 py-1.5 rounded-xl font-mono text-white/80")}
                     />
                     <input type="text" value={row.treatment} placeholder="Tratamento..." onChange={e => updateRow(row.key, "treatment", e.target.value)} className={cn(field, "text-[12px] px-2 py-1.5 rounded-xl text-white/80")} />
-                    <input type="text" value={row.observation} placeholder="Observação..." onChange={e => updateRow(row.key, "observation", e.target.value)} className={cn(field, "text-[12px] px-2 py-1.5 rounded-xl text-white/80")} />
                     <select value={row.resolved ? "true" : "false"} onChange={e => updateRow(row.key, "resolved", e.target.value === "true")} className={cn(field, "text-[12px] px-2 py-1.5 rounded-xl")}>
                       <option value="false">Pendente</option>
                       <option value="true">Resolvido</option>
