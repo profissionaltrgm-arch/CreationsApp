@@ -80,6 +80,17 @@ export default function EmployeesPage() {
   // ─── NOVO: estado para confirmação de exclusão ────────────────────────────
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setIsAdmin(!!session);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsAdmin(!!session);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
 
   useEffect(() => {
     if (selectedClassification === "Falta Justificada") {
@@ -291,11 +302,13 @@ export default function EmployeesPage() {
               </button>
             ))}
           </div>
-          <button onClick={() => setShowModal(true)}
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest shadow-lg shadow-blue-600/20 active:scale-95 transition-all">
-            <Plus size={16} strokeWidth={3} />
-            Novo Registro
-          </button>
+          {isAdmin && (
+            <button onClick={() => setShowModal(true)}
+              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-500 text-white px-5 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest shadow-lg shadow-blue-600/20 active:scale-95 transition-all">
+              <Plus size={16} strokeWidth={3} />
+              Novo Registro
+            </button>
+          )}
         </div>
       </div>
 
@@ -674,16 +687,20 @@ export default function EmployeesPage() {
                 </div>
 
                 <div className="flex items-center gap-3">
-                  {/* Botão Editar */}
-                  <button onClick={() => { setEditingProfile(true); setEditForm({ name: selectedProfile.name, job_title: selectedProfile.job_title, company: selectedProfile.company, Shift: selectedProfile.Shift, status: selectedProfile.status, sector: selectedProfile.sector, process: selectedProfile.process, class: selectedProfile.class }); }}
-                    className="p-3 rounded-xl bg-white/5 border border-white/5 text-gray-400 hover:text-white transition-all" title="Editar colaborador">
-                    <Settings size={18} />
-                  </button>
-                  {/* ─── NOVO: Botão Excluir ─── */}
-                  <button onClick={() => setConfirmDelete(true)}
-                    className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-all" title="Excluir colaborador">
-                    <Trash2 size={18} />
-                  </button>
+                  {isAdmin && (
+                    <>
+                      {/* Botão Editar */}
+                      <button onClick={() => { setEditingProfile(true); setEditForm({ name: selectedProfile.name, job_title: selectedProfile.job_title, company: selectedProfile.company, Shift: selectedProfile.Shift, status: selectedProfile.status, sector: selectedProfile.sector, process: selectedProfile.process, class: selectedProfile.class }); }}
+                        className="p-3 rounded-xl bg-white/5 border border-white/5 text-gray-400 hover:text-white transition-all" title="Editar colaborador">
+                        <Settings size={18} />
+                      </button>
+                      {/* ─── NOVO: Botão Excluir ─── */}
+                      <button onClick={() => setConfirmDelete(true)}
+                        className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 hover:text-red-300 transition-all" title="Excluir colaborador">
+                        <Trash2 size={18} />
+                      </button>
+                    </>
+                  )}
                   {/* Botão Fechar */}
                   <button onClick={() => { setSelectedProfile(null); setConfirmDelete(false); }}
                     className="p-3 rounded-xl bg-white/5 border border-white/5 text-gray-400 hover:text-white transition-all">
@@ -695,12 +712,12 @@ export default function EmployeesPage() {
               {/* Tabs */}
               <div className="px-8 py-4 bg-[#0D1528] border-b border-white/5 flex items-center gap-2">
                 {[
-                  { id: "resumo", label: "Resumo", icon: FileText },
-                  { id: "faltas", label: "Faltas", icon: Activity },
-                  { id: "suspensoes", label: "Suspensões", icon: UserMinus },
-                  { id: "habilidades", label: "Habilidades", icon: Award },
-                  { id: "observacoes", label: "Observações", icon: Zap }
-                ].map((tab) => (
+                  { id: "resumo", label: "Resumo", icon: FileText, public: true },
+                  { id: "faltas", label: "Faltas", icon: Activity, public: false },
+                  { id: "suspensoes", label: "Suspensões", icon: UserMinus, public: false },
+                  { id: "habilidades", label: "Habilidades", icon: Award, public: false },
+                  { id: "observacoes", label: "Observações", icon: Zap, public: false }
+                ].filter(tab => tab.public || isAdmin).map((tab) => (
                   <button key={tab.id} onClick={() => setActiveModalTab(tab.id as any)}
                     className={cn("px-6 py-2.5 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all flex items-center gap-3 border",
                       activeModalTab === tab.id ? "bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-600/20" : "bg-white/[0.02] border-white/5 text-gray-500 hover:border-white/10 hover:text-gray-300")}>
