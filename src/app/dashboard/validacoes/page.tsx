@@ -1506,7 +1506,7 @@ export default function ValidacoesPage() {
                                   </span>
                                   {/* Premium Tooltip */}
                                   <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 hidden group-hover/tooltip:block bg-[#0E121C] border border-white/10 rounded-lg px-2.5 py-1.5 text-[9px] font-extrabold text-white/80 whitespace-nowrap shadow-2xl z-50 pointer-events-none">
-                                    Semanas: {uniqueWeeks.map(w => `S${w}`).join(", ")}
+                                    {uniqueWeeks.map(w => `Semana ${w}`).join("  •  ")}
                                     {/* Arrow */}
                                     <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-[#0E121C] w-0 h-0" />
                                   </div>
