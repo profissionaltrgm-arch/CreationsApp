@@ -9,6 +9,7 @@ import {
   Calendar,
   Zap,
   CalendarDays,
+  PackageX,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRouter, usePathname } from "next/navigation";
@@ -42,11 +43,12 @@ export default function DashboardLayout({
   }, []);
 
   const menuItems = [
-    { label: "Colaboradores", icon: Users,         href: "/dashboard/employees", public: true },
-    { label: "Planejamento",  icon: CalendarDays,  href: "/dashboard/planning",  public: true },
-    { label: "Ausências",     icon: Calendar,      href: "/dashboard/absences",  public: false },
-    { label: "Processos",     icon: Zap,           href: "/dashboard/processes", public: false },
-    { label: "Validações",    icon: ShieldCheck,   href: "/dashboard/validacoes", public: true },
+    { label: "Colaboradores", icon: Users,         href: "/dashboard/employees",   public: true  },
+    { label: "Planejamento",  icon: CalendarDays,  href: "/dashboard/planning",    public: true  },
+    { label: "Ausências",     icon: Calendar,      href: "/dashboard/absences",    public: false },
+    { label: "Processos",     icon: Zap,           href: "/dashboard/processes",   public: false },
+    { label: "Validações",    icon: ShieldCheck,   href: "/dashboard/validacoes",  public: true  },
+    { label: "Quarentena",    icon: PackageX,      href: "/dashboard/quarentena",  public: true  },
   ];
 
   // Route guard: if path is private and user is not admin, redirect to public route
