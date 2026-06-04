@@ -1,12 +1,11 @@
 "use client";
 
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo, useCallback, Fragment } from "react";
 import { supabase } from "@/lib/supabase";
 import {
   ShieldAlert, Package, CheckCircle2, Clock,
   Search, RefreshCw, Loader2, MapPin,
-  BarChart3, X, Check, AlertTriangle, Boxes,
-  TrendingDown, Building2,
+  Boxes, ChevronDown, ChevronUp, Building2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -30,6 +29,7 @@ export default function QuarentenaPage() {
   const [isAdmin, setIsAdmin]            = useState(false);
   const [updatingId, setUpdatingId]      = useState<number | null>(null);
   const [now, setNow]                    = useState(new Date());
+  const [expandedCodes, setExpandedCodes] = useState<Record<string, boolean>>({});
 
   /* ── Auth ─────────────────────────────────────────────────────── */
   useEffect(() => {
@@ -68,7 +68,6 @@ export default function QuarentenaPage() {
   const totalItems   = items.length;
   const pending      = items.filter((i) => !i.resolved);
   const resolvedCnt  = items.filter((i) =>  i.resolved).length;
-  const totalQtyBlocked = pending.reduce((s, i) => s + (i.quantity || 0), 0);
 
   /* ── Filtered rows ─────────────────────────────────────────────── */
   const filtered = useMemo(() => {
@@ -90,6 +89,37 @@ export default function QuarentenaPage() {
     });
   }, [items, search, companyFilter, statusFilter, descMap]);
 
+  /* ── Grouped rows by code ──────────────────────────────────────── */
+  const groupedItems = useMemo(() => {
+    const groups: Record<string, {
+      code: string;
+      description: string;
+      items: QuarantineItem[];
+      totalQty: number;
+      pendingCount: number;
+    }> = {};
+
+    filtered.forEach((item) => {
+      const codeKey = (item.code || "").trim().toUpperCase();
+      if (!groups[codeKey]) {
+        groups[codeKey] = {
+          code: item.code || "—",
+          description: descMap[codeKey] || "—",
+          items: [],
+          totalQty: 0,
+          pendingCount: 0,
+        };
+      }
+      groups[codeKey].items.push(item);
+      groups[codeKey].totalQty += item.quantity || 0;
+      if (!item.resolved) {
+        groups[codeKey].pendingCount += 1;
+      }
+    });
+
+    return Object.values(groups);
+  }, [filtered, descMap]);
+
   /* ── Toggle resolved ───────────────────────────────────────────── */
   async function toggleResolved(item: QuarantineItem) {
     if (!isAdmin) return;
@@ -104,11 +134,12 @@ export default function QuarentenaPage() {
     setUpdatingId(null);
   }
 
-  function fmtDate(d: string) {
-    return new Date(d).toLocaleDateString("pt-BR", {
-      day: "2-digit", month: "2-digit", year: "2-digit",
-    });
-  }
+  const toggleGroup = (code: string) => {
+    setExpandedCodes((prev) => ({
+      ...prev,
+      [code]: !prev[code],
+    }));
+  };
 
   /* ── UI ────────────────────────────────────────────────────────── */
   return (
@@ -149,7 +180,7 @@ export default function QuarentenaPage() {
                   </span>
                   {pending.length > 0 && (
                     <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg bg-red-500/10 border border-red-500/30 text-[9px] font-black text-red-400 uppercase tracking-widest animate-pulse">
-                      <AlertTriangle size={8} /> {pending.length} pendente{pending.length !== 1 ? "s" : ""}
+                      <Clock size={8} /> {pending.length} pendente{pending.length !== 1 ? "s" : ""}
                     </span>
                   )}
                 </div>
@@ -180,12 +211,11 @@ export default function QuarentenaPage() {
           </div>
 
           {/* Stat cards */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {[
               { label: "Total Itens", value: totalItems, icon: Boxes, color: "text-blue-400", glow: "shadow-[0_0_12px_rgba(59,130,246,0.12)]", border: "border-blue-500/15" },
               { label: "Pendentes", value: pending.length, icon: Clock, color: "text-amber-400", glow: "shadow-[0_0_12px_rgba(245,158,11,0.15)]", border: "border-amber-500/20" },
               { label: "Resolvidos", value: resolvedCnt, icon: CheckCircle2, color: "text-emerald-400", glow: "shadow-[0_0_12px_rgba(16,185,129,0.12)]", border: "border-emerald-500/15" },
-              { label: "Qtd. Bloqueada", value: totalQtyBlocked, icon: TrendingDown, color: "text-red-400", glow: "shadow-[0_0_12px_rgba(239,68,68,0.12)]", border: "border-red-500/15" },
             ].map((s) => (
               <div key={s.label}
                    className={cn("bg-black/25 border rounded-2xl p-4 backdrop-blur-sm transition-all hover:bg-black/35", s.border, s.glow)}>
@@ -203,55 +233,64 @@ export default function QuarentenaPage() {
       </div>
 
       {/* ═══ FILTERS ═══════════════════════════════════════════════ */}
-      <div className="flex items-center gap-3 flex-wrap">
+      <div className="flex items-end gap-4 flex-wrap">
         {/* Search */}
-        <div className="relative flex-1 min-w-[220px] group">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600 group-focus-within:text-amber-500 transition-colors" size={15} />
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="BUSCAR POR CÓDIGO, DESCRIÇÃO OU OBSERVAÇÃO..."
-            className="w-full bg-[#0D1117] border border-white/5 rounded-2xl pl-11 pr-4 py-3 text-[11px] font-bold text-white uppercase tracking-widest focus:outline-none focus:border-amber-500/30 transition-all placeholder:text-gray-700"
-          />
-          {search && (
-            <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-white transition-colors">
-              <X size={14} />
-            </button>
-          )}
+        <div className="flex flex-col gap-1.5 flex-1 min-w-[240px]">
+          <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest pl-1">Pesquisar</span>
+          <div className="relative group">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600 group-focus-within:text-amber-500 transition-colors" size={15} />
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="BUSCAR POR CÓDIGO, DESCRIÇÃO OU OBSERVAÇÃO..."
+              className="w-full bg-[#0D1117] border border-white/5 rounded-2xl pl-11 pr-4 py-3 text-[11px] font-bold text-white uppercase tracking-widest focus:outline-none focus:border-amber-500/30 transition-all placeholder:text-gray-700 animate-none"
+            />
+            {search && (
+              <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-white transition-colors">
+                <X size={14} />
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Company filter */}
-        <div className="flex bg-[#0D1117] border border-white/5 rounded-2xl p-1 gap-0.5">
-          {(["Todas", "BR", "AG"] as const).map((c) => (
-            <button key={c} onClick={() => setCompanyFilter(c)}
-              className={cn(
-                "px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-tighter transition-all",
-                companyFilter === c
-                  ? "bg-amber-500/10 text-amber-400 border border-amber-500/20"
-                  : "text-gray-600 hover:text-gray-400"
-              )}>
-              {c === "Todas" ? "Empresa" : c}
-            </button>
-          ))}
+        <div className="flex flex-col gap-1.5">
+          <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest pl-1">Filtrar por Empresa</span>
+          <div className="flex bg-[#0D1117] border border-white/5 rounded-2xl p-1 gap-1">
+            {(["Todas", "BR", "AG"] as const).map((c) => (
+              <button key={c} onClick={() => setCompanyFilter(c)}
+                className={cn(
+                  "px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-200",
+                  companyFilter === c
+                    ? "bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-400 border border-amber-500/30 shadow-[0_0_12px_rgba(245,158,11,0.15)]"
+                    : "text-gray-600 hover:text-gray-400 hover:bg-white/[0.02]"
+                )}>
+                {c === "Todas" ? "Empresa" : c}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Status filter */}
-        <div className="flex bg-[#0D1117] border border-white/5 rounded-2xl p-1 gap-0.5">
-          {(["Todos", "Pendente", "Resolvido"] as const).map((s) => (
-            <button key={s} onClick={() => setStatusFilter(s)}
-              className={cn(
-                "px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-tighter transition-all",
-                statusFilter === s
-                  ? s === "Pendente"
-                    ? "bg-red-500/10 text-red-400 border border-red-500/20"
-                    : s === "Resolvido"
-                    ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                    : "bg-white/5 text-white border border-white/10"
-                  : "text-gray-600 hover:text-gray-400"
-              )}>
-              {s}
-            </button>
-          ))}
+        <div className="flex flex-col gap-1.5">
+          <span className="text-[9px] font-black text-gray-500 uppercase tracking-widest pl-1">Filtrar por Status</span>
+          <div className="flex bg-[#0D1117] border border-white/5 rounded-2xl p-1 gap-1">
+            {(["Todos", "Pendente", "Resolvido"] as const).map((s) => (
+              <button key={s} onClick={() => setStatusFilter(s)}
+                className={cn(
+                  "px-4 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-200",
+                  statusFilter === s
+                    ? s === "Pendente"
+                      ? "bg-red-500/15 text-red-400 border border-red-500/20 shadow-[0_0_12px_rgba(239,68,68,0.15)]"
+                      : s === "Resolvido"
+                      ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 shadow-[0_0_12px_rgba(16,185,129,0.15)]"
+                      : "bg-white/10 text-white border border-white/20"
+                    : "text-gray-600 hover:text-gray-400 hover:bg-white/[0.02]"
+                )}>
+                {s}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -261,18 +300,13 @@ export default function QuarentenaPage() {
           <table className="w-full border-separate border-spacing-0">
             <thead className="sticky top-0 z-10 bg-[#0D1117]/95 backdrop-blur-xl">
               <tr>
-                <th className="w-0 p-0 border-b border-white/5" />
-                {["Data", "Código", "Descrição do Produto", "Qtd.", "Empresa", "Observações", "Status"].map((h) => (
+                <th className="w-12 p-0 border-b border-white/5" />
+                {["Código", "Descrição do Produto", "Qtd. Total", "Status Geral"].map((h) => (
                   <th key={h}
                       className="px-5 py-4 text-left text-[9px] font-black text-gray-600 uppercase tracking-[0.2em] border-b border-white/5 whitespace-nowrap">
                     {h}
                   </th>
                 ))}
-                {isAdmin && (
-                  <th className="px-5 py-4 text-center text-[9px] font-black text-gray-600 uppercase tracking-[0.2em] border-b border-white/5">
-                    Resolver
-                  </th>
-                )}
               </tr>
             </thead>
 
@@ -280,14 +314,14 @@ export default function QuarentenaPage() {
               {loading ? (
                 Array.from({ length: 7 }).map((_, i) => (
                   <tr key={i} className="animate-pulse">
-                    <td colSpan={9} className="px-5 py-4 border-b border-white/[0.02]">
+                    <td colSpan={5} className="px-5 py-4 border-b border-white/[0.02]">
                       <div className="h-2 bg-white/5 rounded-full" style={{ width: `${60 + (i * 7) % 35}%` }} />
                     </td>
                   </tr>
                 ))
-              ) : filtered.length === 0 ? (
+              ) : groupedItems.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="py-28 text-center">
+                  <td colSpan={5} className="py-28 text-center">
                     <div className="w-16 h-16 rounded-3xl bg-amber-500/5 border border-amber-500/10 flex items-center justify-center mx-auto mb-4">
                       <Package size={28} className="text-amber-500/20" />
                     </div>
@@ -300,121 +334,155 @@ export default function QuarentenaPage() {
                   </td>
                 </tr>
               ) : (
-                filtered.map((item) => {
-                  const desc = descMap[item.code?.trim().toUpperCase()] ?? "—";
-                  const isAG = (item.company ?? "").toUpperCase() === "AG";
-                  const isUpdating = updatingId === item.id;
+                groupedItems.map((group) => {
+                  const isExpanded = !!expandedCodes[group.code];
+                  const hasMultiple = group.items.length > 1;
+                  const isAllResolved = group.pendingCount === 0;
 
                   return (
-                    <tr
-                      key={item.id}
-                      className={cn(
-                        "group transition-all duration-200",
-                        item.resolved
-                          ? "opacity-40 hover:opacity-60"
-                          : "hover:bg-amber-500/[0.02]"
-                      )}
-                    >
-                      {/* Left accent bar */}
-                      <td className="relative p-0 w-0 border-b border-white/[0.025]">
-                        <div className={cn(
-                          "absolute left-0 top-0 bottom-0 w-[3px] scale-y-0 group-hover:scale-y-100 transition-transform duration-300 origin-top rounded-r",
-                          item.resolved
-                            ? "bg-emerald-500"
-                            : "bg-amber-500 shadow-[0_0_12px_rgba(245,158,11,0.5)]"
-                        )} />
-                      </td>
-
-                      {/* Data */}
-                      <td className="px-5 py-3.5 border-b border-white/[0.025]">
-                        <span className="text-[11px] font-bold text-gray-600 group-hover:text-gray-400 transition-colors tabular-nums">
-                          {fmtDate(item.created_at)}
-                        </span>
-                      </td>
-
-                      {/* Código */}
-                      <td className="px-5 py-3.5 border-b border-white/[0.025]">
-                        <span className="font-mono text-[13px] font-black text-amber-400/70 group-hover:text-amber-400 transition-colors tracking-wider">
-                          {item.code ?? "—"}
-                        </span>
-                      </td>
-
-                      {/* Descrição */}
-                      <td className="px-5 py-3.5 border-b border-white/[0.025] max-w-[260px]">
-                        <span className="text-[11px] text-gray-400 group-hover:text-white/80 transition-colors line-clamp-2 leading-relaxed">
-                          {desc}
-                        </span>
-                      </td>
-
-                      {/* Quantidade */}
-                      <td className="px-5 py-3.5 border-b border-white/[0.025]">
-                        <div className="flex items-baseline gap-1">
-                          <span className={cn(
-                            "text-[22px] font-light tabular-nums tracking-tight leading-none",
-                            item.resolved ? "text-gray-600" : "text-white"
-                          )}>
-                            {(item.quantity ?? 0).toLocaleString("pt-BR")}
-                          </span>
-                          <span className="text-[9px] text-gray-700 font-bold uppercase">un</span>
-                        </div>
-                      </td>
-
-                      {/* Empresa */}
-                      <td className="px-5 py-3.5 border-b border-white/[0.025]">
-                        <span className={cn(
-                          "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[9px] font-black uppercase tracking-wider",
-                          isAG
-                            ? "bg-purple-500/10 border-purple-500/25 text-purple-400"
-                            : "bg-blue-500/10 border-blue-500/25 text-blue-400"
-                        )}>
-                          <Building2 size={8} />
-                          {item.company ?? "BR"}
-                        </span>
-                      </td>
-
-                      {/* Observações */}
-                      <td className="px-5 py-3.5 border-b border-white/[0.025] max-w-[220px]">
-                        <span className="text-[10px] text-gray-600 italic line-clamp-2">
-                          {item.observations ?? "—"}
-                        </span>
-                      </td>
-
-                      {/* Status */}
-                      <td className="px-5 py-3.5 border-b border-white/[0.025]">
-                        {item.resolved ? (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-[9px] font-black text-emerald-400 uppercase tracking-wider">
-                            <CheckCircle2 size={10} /> Resolvido
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-[9px] font-black text-amber-400 uppercase tracking-wider">
-                            <Clock size={10} className="animate-pulse" /> Pendente
-                          </span>
+                    <Fragment key={group.code}>
+                      {/* Parent Row */}
+                      <tr
+                        onClick={() => toggleGroup(group.code)}
+                        className={cn(
+                          "group transition-all duration-200 cursor-pointer border-b border-white/[0.025]",
+                          isAllResolved ? "opacity-50 hover:opacity-80" : "hover:bg-amber-500/[0.01]"
                         )}
-                      </td>
-
-                      {/* Ação (admin only) */}
-                      {isAdmin && (
-                        <td className="px-5 py-3.5 border-b border-white/[0.025] text-center">
-                          <button
-                            onClick={() => toggleResolved(item)}
-                            disabled={isUpdating}
-                            title={item.resolved ? "Reabrir" : "Marcar como resolvido"}
-                            className={cn(
-                              "w-8 h-8 rounded-xl border flex items-center justify-center mx-auto transition-all active:scale-95",
-                              item.resolved
-                                ? "border-gray-700/50 text-gray-700 hover:border-amber-500/30 hover:text-amber-400 hover:bg-amber-500/5"
-                                : "border-emerald-500/20 text-emerald-500/40 hover:border-emerald-500/40 hover:text-emerald-400 hover:bg-emerald-500/5"
-                            )}
-                          >
-                            {isUpdating
-                              ? <Loader2 size={12} className="animate-spin" />
-                              : item.resolved
-                              ? <X size={12} />
-                              : <Check size={12} />}
-                          </button>
+                      >
+                        {/* Expand Chevron Icon */}
+                        <td className="px-4 py-4 text-center border-b border-white/[0.025]">
+                          <div className="text-gray-500 group-hover:text-amber-400 transition-colors flex items-center justify-center">
+                            {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                          </div>
                         </td>
+
+                        {/* Código */}
+                        <td className="px-5 py-4 border-b border-white/[0.025]">
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono text-[13px] font-black text-amber-400/80 group-hover:text-amber-400 transition-colors tracking-wider">
+                              {group.code}
+                            </span>
+                            {hasMultiple && (
+                              <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/25 text-[8px] font-black text-amber-400 tracking-wider">
+                                {group.items.length} ITENS IGUAIS
+                              </span>
+                            )}
+                          </div>
+                        </td>
+
+                        {/* Descrição */}
+                        <td className="px-5 py-4 border-b border-white/[0.025] max-w-[340px]">
+                          <span className="text-[11px] text-gray-400 group-hover:text-white/80 transition-colors line-clamp-1 leading-relaxed">
+                            {group.description}
+                          </span>
+                        </td>
+
+                        {/* Qtd. Total */}
+                        <td className="px-5 py-4 border-b border-white/[0.025]">
+                          <div className="flex items-baseline gap-1">
+                            <span className={cn(
+                              "text-[20px] font-light tabular-nums tracking-tight leading-none",
+                              isAllResolved ? "text-gray-600" : "text-white"
+                            )}>
+                              {group.totalQty.toLocaleString("pt-BR")}
+                            </span>
+                            <span className="text-[9px] text-gray-700 font-bold uppercase">un</span>
+                          </div>
+                        </td>
+
+                        {/* Status Geral */}
+                        <td className="px-5 py-4 border-b border-white/[0.025]">
+                          {isAllResolved ? (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/25 text-[9px] font-black text-emerald-400 uppercase tracking-wider">
+                              <CheckCircle2 size={10} /> Resolvido
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/25 text-[9px] font-black text-amber-400 uppercase tracking-wider">
+                              <Clock size={10} className="animate-pulse" /> {group.pendingCount} Pendente{group.pendingCount !== 1 ? "s" : ""}
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+
+                      {/* Nested Details Row (when expanded) */}
+                      {isExpanded && (
+                        <tr>
+                          <td colSpan={5} className="px-8 py-3 bg-[#080B10]/40 border-b border-white/[0.02]">
+                            <div className="rounded-2xl border border-white/5 bg-[#090D14]/90 overflow-hidden shadow-inner p-1">
+                              <table className="w-full text-left border-collapse">
+                                <thead>
+                                  <tr className="border-b border-white/5">
+                                    <th className="px-4 py-2.5 text-[9px] font-black text-gray-600 uppercase tracking-widest">Empresa</th>
+                                    <th className="px-4 py-2.5 text-[9px] font-black text-gray-600 uppercase tracking-widest">Observações</th>
+                                    <th className="px-4 py-2.5 text-[9px] font-black text-gray-600 uppercase tracking-widest text-right">Qtd.</th>
+                                    <th className="px-4 py-2.5 text-[9px] font-black text-gray-600 uppercase tracking-widest text-center">Resolvido?</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {group.items.map((item) => {
+                                    const isUpdating = updatingId === item.id;
+                                    return (
+                                      <tr key={item.id} className="border-b border-white/[0.02] last:border-0 hover:bg-white/[0.01] transition-colors">
+                                        <td className="px-4 py-3">
+                                          <span className={cn(
+                                            "inline-flex items-center gap-1 px-2 py-0.5 rounded border text-[9px] font-black uppercase tracking-wider",
+                                            item.company?.toUpperCase() === "AG"
+                                              ? "bg-purple-500/10 border-purple-500/25 text-purple-400"
+                                              : "bg-blue-500/10 border-blue-500/25 text-blue-400"
+                                          )}>
+                                            <Building2 size={8} />
+                                            {item.company || "BR"}
+                                          </span>
+                                        </td>
+                                        <td className="px-4 py-3 text-[10px] text-gray-500 italic max-w-md truncate">
+                                          {item.observations || "—"}
+                                        </td>
+                                        <td className="px-4 py-3 text-right">
+                                          <div className="inline-flex items-baseline gap-0.5 justify-end">
+                                            <span className="text-[14px] font-bold tabular-nums text-white/90">
+                                              {item.quantity.toLocaleString("pt-BR")}
+                                            </span>
+                                            <span className="text-[8px] text-gray-700 font-bold uppercase">un</span>
+                                          </div>
+                                        </td>
+                                        <td className="px-4 py-3">
+                                          <div className="flex items-center justify-center">
+                                            <button
+                                              onClick={() => toggleResolved(item)}
+                                              disabled={!isAdmin || isUpdating}
+                                              className={cn(
+                                                "relative inline-flex h-5 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none",
+                                                item.resolved ? "bg-emerald-500" : "bg-red-500",
+                                                (!isAdmin || isUpdating) && "cursor-not-allowed opacity-50"
+                                              )}
+                                            >
+                                              <span
+                                                className={cn(
+                                                  "pointer-events-none inline-flex h-4 w-4 transform items-center justify-center rounded-full bg-white text-[8px] font-black shadow transition duration-200 ease-in-out",
+                                                  item.resolved ? "translate-x-6 text-emerald-600" : "translate-x-0 text-red-600"
+                                                )}
+                                              >
+                                                {isUpdating ? (
+                                                  <Loader2 size={8} className="animate-spin" />
+                                                ) : item.resolved ? (
+                                                  "S"
+                                                ) : (
+                                                  "N"
+                                                )}
+                                              </span>
+                                            </button>
+                                          </div>
+                                        </td>
+                                      </tr>
+                                    );
+                                  })}
+                                </tbody>
+                              </table>
+                            </div>
+                          </td>
+                        </tr>
                       )}
-                    </tr>
+                    </Fragment>
                   );
                 })
               )}
