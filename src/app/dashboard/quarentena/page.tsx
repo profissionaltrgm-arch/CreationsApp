@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState, useMemo, useCallback, Fragment } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import {
   ShieldAlert, Package, CheckCircle2, Clock,
   Search, RefreshCw, Loader2, MapPin,
-  Boxes, ChevronDown, ChevronUp, Building2,
+  Boxes, Building2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -29,7 +29,6 @@ export default function QuarentenaPage() {
   const [isAdmin, setIsAdmin]            = useState(false);
   const [updatingId, setUpdatingId]      = useState<number | null>(null);
   const [now, setNow]                    = useState(new Date());
-  const [expandedCodes, setExpandedCodes] = useState<Record<string, boolean>>({});
 
   /* ── Auth ─────────────────────────────────────────────────────── */
   useEffect(() => {
@@ -69,9 +68,16 @@ export default function QuarentenaPage() {
   const pending      = items.filter((i) => !i.resolved);
   const resolvedCnt  = items.filter((i) =>  i.resolved).length;
 
-  /* ── Filtered rows ─────────────────────────────────────────────── */
-  const filtered = useMemo(() => {
-    return items.filter((item) => {
+  /* ── Sorted & Filtered rows with duplicates check ───────────────── */
+  const processedItems = useMemo(() => {
+    // Count global occurrences of each code in items list to mark duplicate codes
+    const counts: Record<string, number> = {};
+    items.forEach((item) => {
+      const c = (item.code || "").trim().toUpperCase();
+      counts[c] = (counts[c] || 0) + 1;
+    });
+
+    const filtered = items.filter((item) => {
       const desc = descMap[item.code?.trim().toUpperCase()] ?? "";
       const q = search.toLowerCase();
       const matchSearch =
@@ -87,38 +93,15 @@ export default function QuarentenaPage() {
         (statusFilter === "Resolvido" && item.resolved);
       return matchSearch && matchCompany && matchStatus;
     });
+
+    // Map duplicate flag and sort alphabetically by code so duplicates are grouped together
+    return filtered
+      .map((item) => ({
+        ...item,
+        isDuplicate: counts[(item.code || "").trim().toUpperCase()] > 1,
+      }))
+      .sort((a, b) => (a.code || "").localeCompare(b.code || ""));
   }, [items, search, companyFilter, statusFilter, descMap]);
-
-  /* ── Grouped rows by code ──────────────────────────────────────── */
-  const groupedItems = useMemo(() => {
-    const groups: Record<string, {
-      code: string;
-      description: string;
-      items: QuarantineItem[];
-      totalQty: number;
-      pendingCount: number;
-    }> = {};
-
-    filtered.forEach((item) => {
-      const codeKey = (item.code || "").trim().toUpperCase();
-      if (!groups[codeKey]) {
-        groups[codeKey] = {
-          code: item.code || "—",
-          description: descMap[codeKey] || "—",
-          items: [],
-          totalQty: 0,
-          pendingCount: 0,
-        };
-      }
-      groups[codeKey].items.push(item);
-      groups[codeKey].totalQty += item.quantity || 0;
-      if (!item.resolved) {
-        groups[codeKey].pendingCount += 1;
-      }
-    });
-
-    return Object.values(groups);
-  }, [filtered, descMap]);
 
   /* ── Toggle resolved ───────────────────────────────────────────── */
   async function toggleResolved(item: QuarantineItem) {
@@ -133,13 +116,6 @@ export default function QuarentenaPage() {
     );
     setUpdatingId(null);
   }
-
-  const toggleGroup = (code: string) => {
-    setExpandedCodes((prev) => ({
-      ...prev,
-      [code]: !prev[code],
-    }));
-  };
 
   /* ── UI ────────────────────────────────────────────────────────── */
   return (
@@ -245,11 +221,6 @@ export default function QuarentenaPage() {
               placeholder="BUSCAR POR CÓDIGO, DESCRIÇÃO OU OBSERVAÇÃO..."
               className="w-full bg-[#0D1117] border border-white/5 rounded-2xl pl-11 pr-4 py-3 text-[11px] font-bold text-white uppercase tracking-widest focus:outline-none focus:border-amber-500/30 transition-all placeholder:text-gray-700 animate-none"
             />
-            {search && (
-              <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-white transition-colors">
-                <X size={14} />
-              </button>
-            )}
           </div>
         </div>
 
@@ -300,10 +271,13 @@ export default function QuarentenaPage() {
           <table className="w-full border-separate border-spacing-0">
             <thead className="sticky top-0 z-10 bg-[#0D1117]/95 backdrop-blur-xl">
               <tr>
-                <th className="w-12 p-0 border-b border-white/5" />
-                {["Código", "Descrição do Produto", "Qtd. Total", "Status Geral"].map((h) => (
+                <th className="w-0 p-0 border-b border-white/5" />
+                {["Código", "Descrição do Produto", "Quantidade", "Tipo", "Observações", "Resolvido?"].map((h) => (
                   <th key={h}
-                      className="px-5 py-4 text-left text-[9px] font-black text-gray-600 uppercase tracking-[0.2em] border-b border-white/5 whitespace-nowrap">
+                      className={cn(
+                        "px-5 py-4 text-left text-[9px] font-black text-gray-600 uppercase tracking-[0.2em] border-b border-white/5 whitespace-nowrap",
+                        h === "Resolvido?" && "text-center"
+                      )}>
                     {h}
                   </th>
                 ))}
@@ -314,14 +288,14 @@ export default function QuarentenaPage() {
               {loading ? (
                 Array.from({ length: 7 }).map((_, i) => (
                   <tr key={i} className="animate-pulse">
-                    <td colSpan={5} className="px-5 py-4 border-b border-white/[0.02]">
+                    <td colSpan={7} className="px-5 py-4 border-b border-white/[0.02]">
                       <div className="h-2 bg-white/5 rounded-full" style={{ width: `${60 + (i * 7) % 35}%` }} />
                     </td>
                   </tr>
                 ))
-              ) : groupedItems.length === 0 ? (
+              ) : processedItems.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="py-28 text-center">
+                  <td colSpan={7} className="py-28 text-center">
                     <div className="w-16 h-16 rounded-3xl bg-amber-500/5 border border-amber-500/10 flex items-center justify-center mx-auto mb-4">
                       <Package size={28} className="text-amber-500/20" />
                     </div>
@@ -334,155 +308,116 @@ export default function QuarentenaPage() {
                   </td>
                 </tr>
               ) : (
-                groupedItems.map((group) => {
-                  const isExpanded = !!expandedCodes[group.code];
-                  const hasMultiple = group.items.length > 1;
-                  const isAllResolved = group.pendingCount === 0;
+                processedItems.map((item) => {
+                  const desc = descMap[item.code?.trim().toUpperCase()] ?? "—";
+                  const isAG = (item.company ?? "").toUpperCase() === "AG";
+                  const isUpdating = updatingId === item.id;
 
                   return (
-                    <Fragment key={group.code}>
-                      {/* Parent Row */}
-                      <tr
-                        onClick={() => toggleGroup(group.code)}
-                        className={cn(
-                          "group transition-all duration-200 cursor-pointer border-b border-white/[0.025]",
-                          isAllResolved ? "opacity-50 hover:opacity-80" : "hover:bg-amber-500/[0.01]"
-                        )}
-                      >
-                        {/* Expand Chevron Icon */}
-                        <td className="px-4 py-4 text-center border-b border-white/[0.025]">
-                          <div className="text-gray-500 group-hover:text-amber-400 transition-colors flex items-center justify-center">
-                            {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                          </div>
-                        </td>
-
-                        {/* Código */}
-                        <td className="px-5 py-4 border-b border-white/[0.025]">
-                          <div className="flex items-center gap-2">
-                            <span className="font-mono text-[13px] font-black text-amber-400/80 group-hover:text-amber-400 transition-colors tracking-wider">
-                              {group.code}
-                            </span>
-                            {hasMultiple && (
-                              <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/25 text-[8px] font-black text-amber-400 tracking-wider">
-                                {group.items.length} ITENS IGUAIS
-                              </span>
-                            )}
-                          </div>
-                        </td>
-
-                        {/* Descrição */}
-                        <td className="px-5 py-4 border-b border-white/[0.025] max-w-[340px]">
-                          <span className="text-[11px] text-gray-400 group-hover:text-white/80 transition-colors line-clamp-1 leading-relaxed">
-                            {group.description}
-                          </span>
-                        </td>
-
-                        {/* Qtd. Total */}
-                        <td className="px-5 py-4 border-b border-white/[0.025]">
-                          <div className="flex items-baseline gap-1">
-                            <span className={cn(
-                              "text-[20px] font-light tabular-nums tracking-tight leading-none",
-                              isAllResolved ? "text-gray-600" : "text-white"
-                            )}>
-                              {group.totalQty.toLocaleString("pt-BR")}
-                            </span>
-                            <span className="text-[9px] text-gray-700 font-bold uppercase">un</span>
-                          </div>
-                        </td>
-
-                        {/* Status Geral */}
-                        <td className="px-5 py-4 border-b border-white/[0.025]">
-                          {isAllResolved ? (
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/25 text-[9px] font-black text-emerald-400 uppercase tracking-wider">
-                              <CheckCircle2 size={10} /> Resolvido
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/25 text-[9px] font-black text-amber-400 uppercase tracking-wider">
-                              <Clock size={10} className="animate-pulse" /> {group.pendingCount} Pendente{group.pendingCount !== 1 ? "s" : ""}
-                            </span>
-                          )}
-                        </td>
-                      </tr>
-
-                      {/* Nested Details Row (when expanded) */}
-                      {isExpanded && (
-                        <tr>
-                          <td colSpan={5} className="px-8 py-3 bg-[#080B10]/40 border-b border-white/[0.02]">
-                            <div className="rounded-2xl border border-white/5 bg-[#090D14]/90 overflow-hidden shadow-inner p-1">
-                              <table className="w-full text-left border-collapse">
-                                <thead>
-                                  <tr className="border-b border-white/5">
-                                    <th className="px-4 py-2.5 text-[9px] font-black text-gray-600 uppercase tracking-widest">Empresa</th>
-                                    <th className="px-4 py-2.5 text-[9px] font-black text-gray-600 uppercase tracking-widest">Observações</th>
-                                    <th className="px-4 py-2.5 text-[9px] font-black text-gray-600 uppercase tracking-widest text-right">Qtd.</th>
-                                    <th className="px-4 py-2.5 text-[9px] font-black text-gray-600 uppercase tracking-widest text-center">Resolvido?</th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {group.items.map((item) => {
-                                    const isUpdating = updatingId === item.id;
-                                    return (
-                                      <tr key={item.id} className="border-b border-white/[0.02] last:border-0 hover:bg-white/[0.01] transition-colors">
-                                        <td className="px-4 py-3">
-                                          <span className={cn(
-                                            "inline-flex items-center gap-1 px-2 py-0.5 rounded border text-[9px] font-black uppercase tracking-wider",
-                                            item.company?.toUpperCase() === "AG"
-                                              ? "bg-purple-500/10 border-purple-500/25 text-purple-400"
-                                              : "bg-blue-500/10 border-blue-500/25 text-blue-400"
-                                          )}>
-                                            <Building2 size={8} />
-                                            {item.company || "BR"}
-                                          </span>
-                                        </td>
-                                        <td className="px-4 py-3 text-[10px] text-gray-500 italic max-w-md truncate">
-                                          {item.observations || "—"}
-                                        </td>
-                                        <td className="px-4 py-3 text-right">
-                                          <div className="inline-flex items-baseline gap-0.5 justify-end">
-                                            <span className="text-[14px] font-bold tabular-nums text-white/90">
-                                              {item.quantity.toLocaleString("pt-BR")}
-                                            </span>
-                                            <span className="text-[8px] text-gray-700 font-bold uppercase">un</span>
-                                          </div>
-                                        </td>
-                                        <td className="px-4 py-3">
-                                          <div className="flex items-center justify-center">
-                                            <button
-                                              onClick={() => toggleResolved(item)}
-                                              disabled={!isAdmin || isUpdating}
-                                              className={cn(
-                                                "relative inline-flex h-5 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none",
-                                                item.resolved ? "bg-emerald-500" : "bg-red-500",
-                                                (!isAdmin || isUpdating) && "cursor-not-allowed opacity-50"
-                                              )}
-                                            >
-                                              <span
-                                                className={cn(
-                                                  "pointer-events-none inline-flex h-4 w-4 transform items-center justify-center rounded-full bg-white text-[8px] font-black shadow transition duration-200 ease-in-out",
-                                                  item.resolved ? "translate-x-6 text-emerald-600" : "translate-x-0 text-red-600"
-                                                )}
-                                              >
-                                                {isUpdating ? (
-                                                  <Loader2 size={8} className="animate-spin" />
-                                                ) : item.resolved ? (
-                                                  "S"
-                                                ) : (
-                                                  "N"
-                                                )}
-                                              </span>
-                                            </button>
-                                          </div>
-                                        </td>
-                                      </tr>
-                                    );
-                                  })}
-                                </tbody>
-                              </table>
-                            </div>
-                          </td>
-                        </tr>
+                    <tr
+                      key={item.id}
+                      className={cn(
+                        "group transition-all duration-200 border-b border-white/[0.025]",
+                        item.resolved
+                          ? "opacity-40 hover:opacity-60"
+                          : "hover:bg-amber-500/[0.01]"
                       )}
-                    </Fragment>
+                    >
+                      {/* Left accent bar */}
+                      <td className="relative p-0 w-0 border-b border-white/[0.025]">
+                        <div className={cn(
+                          "absolute left-0 top-0 bottom-0 w-[3px] scale-y-0 group-hover:scale-y-100 transition-transform duration-300 origin-top rounded-r",
+                          item.resolved
+                            ? "bg-emerald-500"
+                            : "bg-amber-500 shadow-[0_0_12px_rgba(245,158,11,0.5)]"
+                        )} />
+                      </td>
+
+                      {/* Código */}
+                      <td className={cn(
+                        "px-5 py-3.5 border-b border-white/[0.025] transition-colors",
+                        item.isDuplicate && "bg-red-500/[0.05]"
+                      )}>
+                        <span className={cn(
+                          "font-mono text-[13px] font-black tracking-wider",
+                          item.isDuplicate
+                            ? "text-red-400"
+                            : "text-amber-400/80 group-hover:text-amber-400 transition-colors"
+                        )}>
+                          {item.code ?? "—"}
+                        </span>
+                      </td>
+
+                      {/* Descrição */}
+                      <td className="px-5 py-3.5 border-b border-white/[0.025] max-w-[280px]">
+                        <span className="text-[11px] text-gray-400 group-hover:text-white/80 transition-colors line-clamp-2 leading-relaxed">
+                          {desc}
+                        </span>
+                      </td>
+
+                      {/* Quantidade */}
+                      <td className="px-5 py-3.5 border-b border-white/[0.025]">
+                        <div className="flex items-baseline gap-1">
+                          <span className={cn(
+                            "text-[20px] font-light tabular-nums tracking-tight leading-none",
+                            item.resolved ? "text-gray-600" : "text-white"
+                          )}>
+                            {(item.quantity ?? 0).toLocaleString("pt-BR")}
+                          </span>
+                          <span className="text-[9px] text-gray-700 font-bold uppercase">un</span>
+                        </div>
+                      </td>
+
+                      {/* Tipo / Empresa */}
+                      <td className="px-5 py-3.5 border-b border-white/[0.025]">
+                        <span className={cn(
+                          "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[9px] font-black uppercase tracking-wider",
+                          isAG
+                            ? "bg-purple-500/10 border-purple-500/25 text-purple-400"
+                            : "bg-blue-500/10 border-blue-500/25 text-blue-400"
+                        )}>
+                          <Building2 size={8} />
+                          {item.company ?? "BR"}
+                        </span>
+                      </td>
+
+                      {/* Observações */}
+                      <td className="px-5 py-3.5 border-b border-white/[0.025] max-w-[340px]">
+                        <span className="text-[11px] text-gray-500 group-hover:text-gray-300 transition-colors leading-relaxed block">
+                          {item.observations ?? "—"}
+                        </span>
+                      </td>
+
+                      {/* Resolvido? */}
+                      <td className="px-5 py-3.5 border-b border-white/[0.025]">
+                        <div className="flex items-center justify-center">
+                          <button
+                            onClick={() => toggleResolved(item)}
+                            disabled={!isAdmin || isUpdating}
+                            className={cn(
+                              "relative inline-flex h-5 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none",
+                              item.resolved ? "bg-emerald-500" : "bg-red-500",
+                              (!isAdmin || isUpdating) && "cursor-not-allowed opacity-50"
+                            )}
+                          >
+                            <span
+                              className={cn(
+                                "pointer-events-none inline-flex h-4 w-4 transform items-center justify-center rounded-full bg-white text-[8px] font-black shadow transition duration-200 ease-in-out",
+                                item.resolved ? "translate-x-6 text-emerald-600" : "translate-x-0 text-red-600"
+                              )}
+                            >
+                              {isUpdating ? (
+                                <Loader2 size={8} className="animate-spin" />
+                              ) : item.resolved ? (
+                                "S"
+                              ) : (
+                                "N"
+                              )}
+                            </span>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
                   );
                 })
               )}
@@ -493,7 +428,7 @@ export default function QuarentenaPage() {
         {/* Table footer */}
         <div className="px-6 py-3 border-t border-white/5 bg-black/20 flex items-center justify-between shrink-0">
           <span className="text-[9px] font-bold text-gray-700 uppercase tracking-widest">
-            {filtered.length} de {totalItems} registros · {pending.length} pendente{pending.length !== 1 ? "s" : ""}
+            {processedItems.length} de {totalItems} registros · {pending.length} pendente{pending.length !== 1 ? "s" : ""}
           </span>
           <div className="flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shadow-[0_0_6px_rgba(245,158,11,0.6)]" />
