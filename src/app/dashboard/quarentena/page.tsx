@@ -173,7 +173,7 @@ function ShareCard({
   return (
     <div
       ref={cardRef}
-      style={{ fontFamily: "'Inter', sans-serif", width: 640, background: "#080C12", padding: "36px 40px", borderRadius: 20 }}
+      style={{ fontFamily: "'Inter', sans-serif", width: 700, background: "#080C12", padding: "36px 40px", borderRadius: 20 }}
     >
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 28 }}>
@@ -188,7 +188,7 @@ function ShareCard({
               color: "#fbbf24", border: "1px solid rgba(245,158,11,0.2)",
               letterSpacing: 0.5, textTransform: "uppercase",
             }}>
-              AJ · G300
+              G300
             </span>
           </div>
           <p style={{ fontSize: 11, color: "#6b7280", marginTop: 4 }}>
@@ -248,8 +248,10 @@ function ShareCard({
                   {item.code}
                 </span>
                 <span style={{
-                  fontSize: 10, color: "#9ca3af", whiteSpace: "nowrap",
-                  overflow: "hidden", textOverflow: "ellipsis", paddingRight: 12,
+                  fontSize: 10, color: "#9ca3af",
+                  paddingRight: 12,
+                  wordBreak: "break-word",
+                  lineHeight: 1.5,
                 }}>
                   {item.observation || descMap[item.code?.trim().toUpperCase()] || "—"}
                 </span>
@@ -269,7 +271,7 @@ function ShareCard({
       {/* Footer */}
       <div style={{ marginTop: 22, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <span style={{ fontSize: 9, color: "#374151" }}>Gerado automaticamente pelo sistema</span>
-        <span style={{ fontSize: 9, color: "#374151" }}>G300 · Armazém AJ</span>
+        <span style={{ fontSize: 9, color: "#374151" }}>Armazém G300</span>
       </div>
     </div>
   );
@@ -503,9 +505,8 @@ export default function QuarentenaPage() {
         {/* ═══ HEADER ═════════════════════════════════════════════════ */}
         <div className="flex items-center justify-between border-b border-white/5 pb-5">
           <div>
-            <h1 className="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+            <h1 className="text-xl font-bold tracking-tight text-white">
               Quarentena
-              <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20">AJ</span>
             </h1>
             <p className="text-xs text-gray-500 mt-1">Produtos em restrição operacional · Armazém G300</p>
           </div>
