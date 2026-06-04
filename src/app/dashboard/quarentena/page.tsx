@@ -198,7 +198,15 @@ export default function QuarentenaPage() {
       {/* ═══ TABLE ═════════════════════════════════════════════════ */}
       <div className="flex-1 bg-[#0D1117] border border-white/5 rounded-2xl overflow-hidden flex flex-col shadow-sm min-h-0">
         <div className="overflow-x-auto overflow-y-auto custom-scrollbar flex-1">
-          <table className="w-full border-separate border-spacing-0">
+          <table className="w-full border-separate border-spacing-0 table-fixed">
+            <colgroup>
+              <col style={{ width: "8%" }} />  {/* Código */}
+              <col style={{ width: "28%" }} /> {/* Descrição */}
+              <col style={{ width: "5%" }} />  {/* Qtd. */}
+              <col style={{ width: "5%" }} />  {/* Tipo */}
+              <col style={{ width: "46%" }} /> {/* Observações */}
+              <col style={{ width: "8%" }} />  {/* Resolvido */}
+            </colgroup>
             <thead className="sticky top-0 z-10 bg-[#0D1117]">
               <tr className="border-b border-white/5">
                 {["Código", "Descrição do Produto", "Qtd.", "Tipo", "Observações", "Resolvido"].map((h) => (
@@ -254,7 +262,7 @@ export default function QuarentenaPage() {
                       </td>
 
                       {/* Descrição */}
-                      <td className="px-4 py-3.5 border-b border-white/[0.02] text-xs text-gray-400 max-w-[280px]">
+                      <td className="px-4 py-3.5 border-b border-white/[0.02] text-xs text-gray-400">
                         <span className="line-clamp-2 leading-relaxed">
                           {desc}
                         </span>
@@ -278,7 +286,7 @@ export default function QuarentenaPage() {
                       </td>
 
                       {/* Observações */}
-                      <td className="px-4 py-3.5 border-b border-white/[0.02] text-xs text-gray-400 w-full">
+                      <td className="px-4 py-3.5 border-b border-white/[0.02] text-xs text-gray-400">
                         <span className="leading-relaxed block">
                           {item.observation ?? "—"}
                         </span>
