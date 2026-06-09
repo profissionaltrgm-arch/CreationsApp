@@ -186,6 +186,25 @@ function ShareCard({
     },
   ].filter((g) => g.items.length > 0);
 
+  // Helper for consistent badge styling to fix html2canvas issues
+  const badgeStyle = (color: string, bg: string, border: string) => ({
+    fontSize: 10,
+    fontWeight: 700,
+    textTransform: "uppercase" as const,
+    letterSpacing: 1,
+    color: color,
+    padding: "4px 10px",
+    background: bg,
+    border: `1px solid ${border}`,
+    borderRadius: 999,
+    boxSizing: "border-box" as const,
+    display: "inline-flex" as const,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    whiteSpace: "nowrap" as const,
+    lineHeight: 1,
+  });
+
   return (
     <div
       ref={cardRef}
@@ -198,12 +217,7 @@ function ShareCard({
             <span style={{ fontSize: 18, fontWeight: 700, color: "#fff", letterSpacing: -0.5 }}>
               Quarentena
             </span>
-            <span style={{
-              fontSize: 10, fontWeight: 600, padding: "2px 8px",
-              borderRadius: 999, background: "rgba(245,158,11,0.12)",
-              color: "#fbbf24", border: "1px solid rgba(245,158,11,0.2)",
-              letterSpacing: 0.5, textTransform: "uppercase",
-            }}>
+            <span style={badgeStyle("#fbbf24", "rgba(245,158,11,0.12)", "rgba(245,158,11,0.2)")}>
               G300
             </span>
           </div>
@@ -237,15 +251,7 @@ function ShareCard({
       {groups.map((group, groupIdx) => (
         <div key={group.label} style={{ marginBottom: 24, marginTop: groupIdx > 0 ? 32 : 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-            <span style={{
-              fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1.5,
-              color: group.color, padding: "4px 10px",
-              background: group.bg, border: `1px solid ${group.border}`,
-              borderRadius: 999,
-              boxSizing: "border-box",
-              display: "inline-block",
-              whiteSpace: "nowrap",
-            }}>
+            <span style={badgeStyle(group.color, group.bg, group.border)}>
               {group.label}
             </span>
             <span style={{ fontSize: 10, color: "#4b5563" }}>
