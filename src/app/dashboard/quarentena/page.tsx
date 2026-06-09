@@ -193,16 +193,16 @@ function ShareCard({
     textTransform: "uppercase" as const,
     letterSpacing: 1,
     color: color,
-    padding: "4px 10px",
+    height: "20px",
+    lineHeight: "18px", // Altura total (20) - Bordas (2) para centralização perfeita na imagem
+    padding: "0 10px",
     background: bg,
     border: `1px solid ${border}`,
     borderRadius: 999,
     boxSizing: "border-box" as const,
-    display: "inline-flex" as const,
-    alignItems: "center" as const,
-    justifyContent: "center" as const,
+    display: "inline-block" as const, // inline-block evita o bug de alinhamento flex no html2canvas
+    textAlign: "center" as const,
     whiteSpace: "nowrap" as const,
-    lineHeight: 1,
   });
 
   return (
