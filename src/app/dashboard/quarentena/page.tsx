@@ -187,22 +187,14 @@ function ShareCard({
   ].filter((g) => g.items.length > 0);
 
   // Helper for consistent badge styling to fix html2canvas issues
+ // Helper simplificado: removemos a borda e o fundo para o html2canvas não bugar
   const badgeStyle = (color: string, bg: string, border: string) => ({
-    fontSize: 10,
-    fontWeight: 700,
+    fontSize: 11,
+    fontWeight: 800,
     textTransform: "uppercase" as const,
     letterSpacing: 1,
     color: color,
-    height: "20px",
-    lineHeight: "18px", // Altura total (20) - Bordas (2) para centralização perfeita na imagem
-    padding: "0 10px",
-    background: bg,
-    border: `1px solid ${border}`,
-    borderRadius: 999,
-    boxSizing: "border-box" as const,
-    display: "inline-block" as const, // inline-block evita o bug de alinhamento flex no html2canvas
-    textAlign: "center" as const,
-    whiteSpace: "nowrap" as const,
+    display: "inline-block" as const,
   });
 
   return (
