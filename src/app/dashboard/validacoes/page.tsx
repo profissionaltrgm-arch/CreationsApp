@@ -108,121 +108,6 @@ function getWeekNumber(dateStr: string): number {
   return Math.ceil(((date.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
 }
 
-// Helper para estilo de badge consistente (Fix para html2canvas)
-const badgeStyle = (color: string, bg: string, border: string) => ({
-  fontSize: 10,
-  fontWeight: 700,
-  textTransform: "uppercase" as const,
-  letterSpacing: 1,
-  color: color,
-  padding: "4px 10px",
-  background: bg,
-  border: `1px solid ${border}`,
-  borderRadius: 999,
-  boxSizing: "border-box" as const,
-  display: "inline-flex" as const,
-  alignItems: "center" as const,
-  justifyContent: "center" as const,
-  whiteSpace: "nowrap" as const,
-  lineHeight: 1,
-});
-
-/* ─── Share Card Component (Para exportação de imagem) ──────────────── */
-function ShareCard({
-  cardRef, items, weekInfo
-}: {
-  cardRef: React.RefObject<HTMLDivElement | null>;
-  items: Divergence[];
-  weekInfo: string;
-}) {
-  const now = new Date().toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" });
-  const pending = items.filter(i => !i.resolved);
-  
-  const groups = [
-    {
-      label: "BR",
-      color: "#34d399",
-      bg: "rgba(16,185,129,0.06)",
-      border: "rgba(16,185,129,0.15)",
-      items: pending.filter(i => i.company === "BR").sort((a, b) => a.code.localeCompare(b.code)),
-    },
-    {
-      label: "AG",
-      color: "#60a5fa",
-      bg: "rgba(96,165,250,0.06)",
-      border: "rgba(96,165,250,0.15)",
-      items: pending.filter(i => i.company === "AG").sort((a, b) => a.code.localeCompare(b.code)),
-    },
-  ].filter(g => g.items.length > 0);
-
-  return (
-    <div
-      ref={cardRef}
-      style={{
-        fontFamily: "'Inter', sans-serif",
-        width: 600,
-        background: "#080C12",
-        padding: "40px",
-        borderRadius: "24px",
-        color: "white"
-      }}
-    >
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 32 }}>
-        <div>
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <span style={{ fontSize: 20, fontWeight: 800, color: "#fff", letterSpacing: "-0.02em" }}>
-              Quarentena
-            </span>
-            <span style={badgeStyle("#fbbf24", "rgba(245,158,11,0.1)", "rgba(245,158,11,0.2)")}>
-              G300
-            </span>
-          </div>
-          <p style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", marginTop: 6, fontWeight: 500 }}>
-            Situação atual · {now}
-          </p>
-        </div>
-      </div>
-
-      <div style={{ marginBottom: 40 }}>
-        <p style={{ fontSize: 10, fontWeight: 800, color: "rgba(255,255,255,0.3)", textTransform: "uppercase", letterSpacing: 1.5, marginBottom: 16, textAlign: "center" }}>
-          Total em Quarentena
-        </p>
-        <p style={{ fontSize: 48, fontWeight: 300, color: "#fff", textAlign: "center", margin: 0 }}>
-          {pending.length}
-        </p>
-      </div>
-
-      {groups.map((group, gIdx) => (
-        <div key={group.label} style={{ marginBottom: 32 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 16 }}>
-            <span style={badgeStyle(group.color, group.bg, group.border)}>
-              {group.label}
-            </span>
-            <span style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", fontWeight: 600 }}>
-              {group.items.length} itens
-            </span>
-          </div>
-
-          <div style={{ background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.05)", borderRadius: 16, overflow: "hidden" }}>
-            <div style={{ display: "grid", gridTemplateColumns: "120px 1fr 60px", padding: "12px 20px", borderBottom: "1px solid rgba(255,255,255,0.05)", background: "rgba(255,255,255,0.02)" }}>
-              {["Código", "Obs.", "Qtd."].map(h => (
-                <span key={h} style={{ fontSize: 10, fontWeight: 800, color: "rgba(255,255,255,0.2)", textTransform: "uppercase", letterSpacing: 1 }}>{h}</span>
-              ))}
-            </div>
-            {group.items.map((item, i) => (
-              <div key={i} style={{ display: "grid", gridTemplateColumns: "120px 1fr 60px", padding: "12px 20px", borderBottom: i < group.items.length - 1 ? "1px solid rgba(255,255,255,0.03)" : "none" }}>
-                <span style={{ fontSize: 12, fontWeight: 700, color: "rgba(255,255,255,0.8)" }}>{item.code}</span>
-                <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", paddingRight: 10 }}>{item.observation || "—"}</span>
-                <span style={{ fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.6)", textAlign: "right" }}>{item.physical_qty}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
 // ─── Nova Validação Modal ──────────────────────────────────────────────────────
 function NovaValidacaoModal({ onClose, onSaved, descMap }: { onClose: () => void; onSaved: () => void; descMap: Record<string, string> }) {
   const today = new Date().toISOString().split("T")[0];
@@ -592,17 +477,6 @@ function EditarValidacaoModal({ group, onClose, onSaved, descMap }: { group: Wee
 
 // ─── Detail View ─────────────────────────────────────────
 function DetailView({ v, onBack, descMap }: { v: WeekGroup; onBack: () => void; descMap: Record<string, string> }) {
-  const [capturing, setCapturing] = useState(false);
-  const cardRef = useRef<HTMLDivElement>(null);
-  async function handleCapture() {
-    if (!cardRef.current) return;
-    setCapturing(true);
-    try {
-      const html2canvas = (await import("html2canvas")).default;
-      const canvas = await html2canvas(cardRef.current, { backgroundColor: "#080C12", scale: 2, useCORS: true });
-      const link = document.createElement("a"); link.download = `auditoria_semana_${v.week_number}.png`; link.href = canvas.toDataURL("image/png"); link.click();
-    } finally { setCapturing(false); }
-  }
   const valAg = v.sessions.find(s => s.company === "AG")?.validated_count ?? 0;
   const valBr = v.sessions.find(s => s.company === "BR")?.validated_count ?? 0;
   const totalVal = valAg + valBr;
@@ -611,16 +485,18 @@ function DetailView({ v, onBack, descMap }: { v: WeekGroup; onBack: () => void; 
 
   return (
     <div className="min-h-full space-y-6">
-      <div style={{ position: "fixed", left: -9999, top: 0, zIndex: -1 }}><ShareCard cardRef={cardRef} items={v.divergences} weekInfo={`Semana ${v.week_number}`} /></div>
       <div className="flex items-center justify-between">
         <button onClick={onBack} className="flex items-center gap-2 text-white/40 hover:text-white transition-colors group"><ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" /><span className="text-[11px] font-bold uppercase tracking-widest">Voltar para Lista</span></button>
-        <button onClick={handleCapture} disabled={capturing} className="flex items-center gap-2 bg-white/5 border border-white/10 hover:bg-white/10 text-white text-[11px] font-bold uppercase tracking-wider px-5 py-2.5 rounded-xl transition-all">{capturing ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}{capturing ? "Gerando..." : "Baixar Imagem"}</button>
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
           <div className="bg-[#0D1117] border border-white/5 rounded-[32px] p-8 relative overflow-hidden">
             <div className="flex items-center justify-between mb-8">
-              <div><div className="flex items-center gap-3 mb-1"><h2 className="text-2xl font-bold uppercase tracking-tighter">Semana {v.week_number}</h2><span className="text-[10px] font-extrabold bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2.5 py-1 rounded-full uppercase tracking-widest">{v.type}</span></div><p className="text-[11px] text-white/30 font-bold uppercase tracking-widest">{fmtFullDate(v.week_start)} até {fmtFullDate(v.week_end)}</p></div>
+              <div>
+                <div className="flex items-center gap-3 mb-1"><h2 className="text-2xl font-bold uppercase tracking-tighter">Semana {v.week_number}</h2><span className="text-[10px] font-extrabold bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2.5 py-1 rounded-full uppercase tracking-widest">{v.type}</span></div>
+                {/* AJUSTE DE DATA: Removido o "até data final" */}
+                <p className="text-[11px] text-white/30 font-bold uppercase tracking-widest">{fmtFullDate(v.week_start)}</p>
+              </div>
               <div className="text-right"><span className="block text-[10px] font-extrabold text-white/20 uppercase tracking-widest mb-1">Acurácia da Semana</span><span className={cn("text-3xl font-light tabular-nums", accuracy >= 95 ? "text-emerald-400" : "text-amber-400")}>{accuracy.toFixed(1)}%</span></div>
             </div>
             <div className="grid grid-cols-3 gap-4">{[{ label: "Auditadas", val: totalVal, color: "text-white/60" }, { label: "Divergências", val: totalDivs, color: "text-red-400" }, { label: "Corretas", val: totalVal - totalDivs, color: "text-emerald-400" }].map(s => (<div key={s.label} className="bg-white/[0.02] border border-white/5 rounded-2xl p-4"><span className="block text-[9px] font-bold text-white/20 uppercase tracking-widest mb-1">{s.label}</span><span className={cn("text-xl font-bold font-mono", s.color)}>{s.val}</span></div>))}</div>
@@ -792,14 +668,27 @@ export default function ValidacoesPage() {
                   <tbody className="divide-y divide-white/[0.03]">{weekGroups.map(v => {
                     const total = v.sessions.reduce((acc, s) => acc + s.validated_count, 0); const acc = total > 0 ? ((total - v.divergences.length) / total) * 100 : 100;
                     return (<tr key={v.week_number} onClick={() => { setSelected(v); setView("detail"); }} className="group hover:bg-white/[0.01] cursor-pointer transition-all"><td className="px-6 py-4 font-bold text-white">Semana {v.week_number}</td><td className="px-6 py-4 font-mono text-white/60">{fmtFullDate(v.week_start)}</td><td className="px-6 py-4 text-center font-mono font-bold text-emerald-400">{acc.toFixed(1)}%</td><td className="px-6 py-4 text-right" onClick={e => e.stopPropagation()}><div className="flex justify-end gap-2">
-                      {/* CORREÇÃO DO LÁPIS - Apenas stopPropagation adicionado */}
                       <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); setEditingGroup(v); }} className="p-2 rounded-xl text-amber-400 bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/20 transition-all"><Pencil size={13} /></button>
                       <button onClick={(e) => deleteWeekGroup(v, e)} className="p-2 rounded-xl text-red-500 bg-red-500/10 border border-red-500/20 hover:bg-red-500/20 transition-all"><Trash2 size={13} /></button>
                     </div></td></tr>);
                   })}</tbody></table></div>
             ) : (
               <div className="overflow-x-auto"><table className="w-full border-collapse"><thead><tr className="border-b border-white/5 bg-[#080B11]/50 text-[10px] font-bold uppercase tracking-widest text-white/30"><th className="px-4 py-4 text-left">Posição</th><th className="px-4 py-4 text-left">Código</th><th className="px-4 py-4 text-left">Tratamento</th><th className="px-4 py-4 text-center">Status</th><th className="px-4 py-4 w-12"></th></tr></thead>
-                  <tbody className="divide-y divide-white/[0.03]">{consolidatedList.map(group => (<tr key={group.key} className="hover:bg-white/[0.01] cursor-pointer transition-all"><td className="px-4 py-3 font-mono text-white/60">{group.position}</td><td className="px-4 py-3 font-mono font-bold text-white/80">{group.code}</td><td className="px-4 py-3 text-[11px] text-white/40 italic">{group.treatment || "—"}</td><td className="px-4 py-3 text-center"><span className={cn("text-[9px] font-extrabold uppercase tracking-widest px-2 py-1 rounded-full", group.resolved ? "text-emerald-400 bg-emerald-500/5 border border-emerald-500/20" : "text-amber-500 bg-amber-500/5 border border-amber-500/20")}>{group.resolved ? "Resolvido" : "Pendente"}</span></td><td className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}><button onClick={() => setEditingTratativa(group)} className="p-1.5 rounded-xl text-blue-400 bg-blue-500/10 border border-blue-500/20 hover:bg-blue-500/20 transition-all"><Pencil size={12} /></button></td></tr>))}</tbody></table></div>
+                  <tbody className="divide-y divide-white/[0.03]">{consolidatedList.map(group => (
+                    <tr key={group.key} className="hover:bg-white/[0.01] cursor-pointer transition-all">
+                      <td className="px-4 py-3 font-mono text-white/60">{group.position}</td>
+                      <td className="px-4 py-3">
+                        {/* ADICIONADO: Descrição do produto abaixo do código no painel de divergências */}
+                        <div className="flex flex-col">
+                          <span className="font-mono font-bold text-white/80">{group.code}</span>
+                          <span className="text-[10px] text-white/30 truncate max-w-[250px]">{descMap[group.code] || "—"}</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-[11px] text-white/40 italic">{group.treatment || "—"}</td>
+                      <td className="px-4 py-3 text-center"><span className={cn("text-[9px] font-extrabold uppercase tracking-widest px-2 py-1 rounded-full", group.resolved ? "text-emerald-400 bg-emerald-500/5 border border-emerald-500/20" : "text-amber-500 bg-amber-500/5 border border-amber-500/20")}>{group.resolved ? "Resolvido" : "Pendente"}</span></td>
+                      <td className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}><button onClick={() => setEditingTratativa(group)} className="p-1.5 rounded-xl text-blue-400 bg-blue-500/10 border border-blue-500/20 hover:bg-blue-500/20 transition-all"><Pencil size={12} /></button></td>
+                    </tr>
+                  ))}</tbody></table></div>
             )}
           </div>
         </div></div>
