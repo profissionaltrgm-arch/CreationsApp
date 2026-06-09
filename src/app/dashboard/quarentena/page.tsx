@@ -239,9 +239,12 @@ function ShareCard({
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
             <span style={{
               fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1.5,
-              color: group.color, padding: "2px 10px",
+              color: group.color, padding: "4px 10px",
               background: group.bg, border: `1px solid ${group.border}`,
               borderRadius: 999,
+              boxSizing: "border-box",
+              display: "inline-block",
+              whiteSpace: "nowrap",
             }}>
               {group.label}
             </span>
