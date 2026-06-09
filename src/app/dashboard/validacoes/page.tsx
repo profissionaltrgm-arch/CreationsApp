@@ -494,7 +494,6 @@ function DetailView({ v, onBack, descMap }: { v: WeekGroup; onBack: () => void; 
             <div className="flex items-center justify-between mb-8">
               <div>
                 <div className="flex items-center gap-3 mb-1"><h2 className="text-2xl font-bold uppercase tracking-tighter">Semana {v.week_number}</h2><span className="text-[10px] font-extrabold bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2.5 py-1 rounded-full uppercase tracking-widest">{v.type}</span></div>
-                {/* AJUSTE DE DATA: Removido o "até data final" */}
                 <p className="text-[11px] text-white/30 font-bold uppercase tracking-widest">{fmtFullDate(v.week_start)}</p>
               </div>
               <div className="text-right"><span className="block text-[10px] font-extrabold text-white/20 uppercase tracking-widest mb-1">Acurácia da Semana</span><span className={cn("text-3xl font-light tabular-nums", accuracy >= 95 ? "text-emerald-400" : "text-amber-400")}>{accuracy.toFixed(1)}%</span></div>
@@ -505,7 +504,8 @@ function DetailView({ v, onBack, descMap }: { v: WeekGroup; onBack: () => void; 
             <div className="px-8 py-6 border-b border-white/5 flex items-center justify-between bg-white/[0.01]"><h3 className="text-[11px] font-extrabold uppercase tracking-widest text-white/40">Detalhamento das Divergências</h3><span className="text-[10px] font-bold bg-red-500/10 text-red-400 px-2.5 py-1 rounded-full">{totalDivs} registros</span></div>
             <div className="overflow-x-auto">
               <table className="w-full text-left">
-                <thead><tr className="border-b border-white/5 text-[9px] font-extrabold uppercase tracking-widest text-white/20"><th className="px-8 py-4">Posição</th><th className="px-8 py-4">Código</th><th className="px-8 py-4">Empresa</th><th className="px-8 py-4 text-center">Sistema</th><th className="px-8 py-4 text-center">Físico</th><th className="px-8 py-4">Status</th></tr></thead>
+                {/* AJUSTE: Adicionada coluna de Tratamento no cabeçalho */}
+                <thead><tr className="border-b border-white/5 text-[9px] font-extrabold uppercase tracking-widest text-white/20"><th className="px-8 py-4">Posição</th><th className="px-8 py-4">Código</th><th className="px-8 py-4">Empresa</th><th className="px-8 py-4 text-center">Sistema</th><th className="px-8 py-4 text-center">Físico</th><th className="px-8 py-4">Tratamento</th><th className="px-8 py-4">Status</th></tr></thead>
                 <tbody className="divide-y divide-white/[0.02]">
                   {v.divergences.map((d, i) => (
                     <tr key={i} className="hover:bg-white/[0.01] transition-colors">
@@ -514,6 +514,8 @@ function DetailView({ v, onBack, descMap }: { v: WeekGroup; onBack: () => void; 
                       <td className="px-8 py-4 text-[11px] font-bold text-white/40">{d.company}</td>
                       <td className="px-8 py-4 text-center text-[12px] font-mono text-white/30">{d.system_qty}</td>
                       <td className="px-8 py-4 text-center text-[12px] font-mono text-white/80 font-bold">{d.physical_qty}</td>
+                      {/* AJUSTE: Adicionada coluna de Tratamento no corpo da tabela */}
+                      <td className="px-8 py-4 text-[11px] text-white/40 italic">{d.treatment || "—"}</td>
                       <td className="px-8 py-4"><span className={cn("text-[9px] font-extrabold uppercase tracking-widest px-2 py-0.5 rounded-full", d.resolved ? "text-emerald-400 bg-emerald-500/10" : "text-amber-400 bg-amber-500/10")}>{d.resolved ? "Resolvido" : "Pendente"}</span></td>
                     </tr>
                   ))}
@@ -678,7 +680,6 @@ export default function ValidacoesPage() {
                     <tr key={group.key} className="hover:bg-white/[0.01] cursor-pointer transition-all">
                       <td className="px-4 py-3 font-mono text-white/60">{group.position}</td>
                       <td className="px-4 py-3">
-                        {/* ADICIONADO: Descrição do produto abaixo do código no painel de divergências */}
                         <div className="flex flex-col">
                           <span className="font-mono font-bold text-white/80">{group.code}</span>
                           <span className="text-[10px] text-white/30 truncate max-w-[250px]">{descMap[group.code] || "—"}</span>
