@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import {
   Search, RefreshCw, Loader2, Plus, Pencil, Trash2, X,
-  FileSpreadsheet, Share2, Download,
+  FileSpreadsheet, Share2, Download, AlertCircle, CheckCircle2, Clock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import * as XLSX from "xlsx";
@@ -41,77 +41,124 @@ function Modal({
   setForm: (f: FormData) => void;
 }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-md mx-4 bg-[#0D1117] border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/5">
-          <h2 className="text-sm font-semibold text-white tracking-tight">{title}</h2>
-          <button onClick={onClose} className="p-1.5 rounded-lg text-gray-500 hover:text-white hover:bg-white/5 transition-colors">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* Backdrop com animação */}
+      <div 
+        className="absolute inset-0 bg-black/50 backdrop-blur-md transition-opacity duration-300 animate-in fade-in"
+        onClick={onClose} 
+      />
+      
+      {/* Modal com animação melhorada */}
+      <div className="relative z-10 w-full max-w-md bg-gradient-to-br from-[#0D1117] to-[#0A0E13] border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-300">
+        {/* Header com gradiente */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 bg-gradient-to-r from-white/[0.03] to-transparent">
+          <h2 className="text-sm font-bold text-white tracking-tight">{title}</h2>
+          <button 
+            onClick={onClose} 
+            className="p-1.5 rounded-lg text-gray-500 hover:text-white hover:bg-white/10 transition-all duration-200 hover:scale-110"
+          >
             <X size={14} />
           </button>
         </div>
-        <div className="px-6 py-5 flex flex-col gap-4">
-          <div className="flex flex-col gap-1.5">
-            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Código</label>
-            <input value={form.code} onChange={(e) => setForm({ ...form, code: e.target.value })}
+
+        {/* Conteúdo com scroll suave */}
+        <div className="px-6 py-5 flex flex-col gap-4 max-h-[70vh] overflow-y-auto">
+          {/* Código */}
+          <div className="flex flex-col gap-2">
+            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Código</label>
+            <input 
+              value={form.code} 
+              onChange={(e) => setForm({ ...form, code: e.target.value })}
               placeholder="Ex: 2555-03"
-              className="bg-[#080B10] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white placeholder:text-gray-600 focus:outline-none focus:border-white/20 transition-colors" />
+              className="bg-white/[0.03] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white placeholder:text-gray-600 focus:outline-none focus:border-white/30 focus:bg-white/[0.05] transition-all duration-200" 
+            />
           </div>
+
+          {/* Quantidade e Empresa */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Quantidade</label>
-              <input type="number" min={0} value={form.quantity}
+            <div className="flex flex-col gap-2">
+              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Quantidade</label>
+              <input 
+                type="number" 
+                min={0} 
+                value={form.quantity}
                 onChange={(e) => setForm({ ...form, quantity: Number(e.target.value) })}
-                className="bg-[#080B10] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-white/20 transition-colors" />
+                className="bg-white/[0.03] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-white/30 focus:bg-white/[0.05] transition-all duration-200" 
+              />
             </div>
-            <div className="flex flex-col gap-1.5">
-              <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Empresa</label>
-              <div className="flex bg-[#080B10] border border-white/10 rounded-xl p-1 gap-1">
+            
+            <div className="flex flex-col gap-2">
+              <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Empresa</label>
+              <div className="flex bg-white/[0.02] border border-white/10 rounded-xl p-1 gap-1">
                 {(["BR", "AG"] as const).map((c) => (
-                  <button key={c} type="button" onClick={() => setForm({ ...form, company: c })}
+                  <button 
+                    key={c} 
+                    type="button" 
+                    onClick={() => setForm({ ...form, company: c })}
                     className={cn(
-                      "flex-1 py-1.5 rounded-lg text-[10px] font-bold uppercase transition-all duration-150",
+                      "flex-1 py-1.5 rounded-lg text-[10px] font-bold uppercase transition-all duration-200 transform hover:scale-105",
                       form.company === c
-                        ? c === "AG" ? "bg-blue-500/20 text-blue-400 border border-blue-500/20"
-                          : "bg-emerald-500/20 text-emerald-400 border border-emerald-500/20"
-                        : "text-gray-600 hover:text-gray-400"
-                    )}>
+                        ? c === "AG" 
+                          ? "bg-blue-500/30 text-blue-300 border border-blue-500/40 shadow-lg shadow-blue-500/20"
+                          : "bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 shadow-lg shadow-emerald-500/20"
+                        : "text-gray-600 hover:text-gray-400 hover:bg-white/[0.05]"
+                    )}
+                  >
                     {c}
                   </button>
                 ))}
               </div>
             </div>
           </div>
-          <div className="flex flex-col gap-1.5">
-            <label className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Observação</label>
-            <textarea rows={3} value={form.observation}
+
+          {/* Observação */}
+          <div className="flex flex-col gap-2">
+            <label className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Observação</label>
+            <textarea 
+              rows={3} 
+              value={form.observation}
               onChange={(e) => setForm({ ...form, observation: e.target.value })}
               placeholder="Descreva o motivo da quarentena..."
-              className="bg-[#080B10] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white placeholder:text-gray-600 focus:outline-none focus:border-white/20 transition-colors resize-none leading-relaxed" />
+              className="bg-white/[0.03] border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white placeholder:text-gray-600 focus:outline-none focus:border-white/30 focus:bg-white/[0.05] transition-all duration-200 resize-none leading-relaxed" 
+            />
           </div>
-          <div className="flex items-center justify-between rounded-xl bg-[#080B10] border border-white/5 px-4 py-3">
-            <span className="text-xs text-gray-400 font-light">Marcar como resolvido</span>
-            <button type="button" onClick={() => setForm({ ...form, resolved: !form.resolved })}
+
+          {/* Toggle Resolvido */}
+          <div className="flex items-center justify-between rounded-xl bg-white/[0.02] border border-white/10 px-4 py-3 hover:bg-white/[0.04] transition-colors duration-200">
+            <span className="text-xs text-gray-400 font-medium">Marcar como resolvido</span>
+            <button 
+              type="button" 
+              onClick={() => setForm({ ...form, resolved: !form.resolved })}
               className={cn(
-                "relative inline-flex h-5 w-10 shrink-0 cursor-pointer rounded-full p-0.5 transition-colors duration-200 ease-in-out focus:outline-none",
-                form.resolved ? "bg-emerald-500/80" : "bg-[#1e293b] border border-white/5"
-              )}>
+                "relative inline-flex h-5 w-10 shrink-0 cursor-pointer rounded-full p-0.5 transition-all duration-300 ease-in-out focus:outline-none",
+                form.resolved 
+                  ? "bg-emerald-500/80 shadow-lg shadow-emerald-500/30" 
+                  : "bg-[#1e293b] border border-white/10"
+              )}
+            >
               <span className={cn(
-                "pointer-events-none inline-flex h-4 w-4 transform items-center justify-center rounded-full bg-white transition-transform duration-200 ease-in-out shadow-sm",
+                "pointer-events-none inline-flex h-4 w-4 transform items-center justify-center rounded-full bg-white transition-all duration-300 ease-in-out shadow-sm",
                 form.resolved ? "translate-x-5" : "translate-x-0"
               )} />
             </button>
           </div>
         </div>
-        <div className="px-6 pb-5 flex gap-3">
-          <button onClick={onClose}
-            className="flex-1 py-2.5 rounded-xl text-xs font-semibold text-gray-400 border border-white/10 hover:bg-white/5 hover:text-white transition-colors">
+
+        {/* Footer com botões */}
+        <div className="px-6 pb-5 flex gap-3 border-t border-white/5 bg-gradient-to-r from-white/[0.01] to-transparent">
+          <button 
+            onClick={onClose}
+            className="flex-1 py-2.5 rounded-xl text-xs font-semibold text-gray-400 border border-white/10 hover:bg-white/5 hover:text-white transition-all duration-200 hover:scale-105"
+          >
             Cancelar
           </button>
-          <button onClick={onSubmit} disabled={submitting || !form.code.trim()}
-            className="flex-1 py-2.5 rounded-xl text-xs font-semibold text-white bg-white/10 hover:bg-white/15 border border-white/10 transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+          <button 
+            onClick={onSubmit} 
+            disabled={submitting || !form.code.trim()}
+            className="flex-1 py-2.5 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-blue-500/30 to-blue-600/20 hover:from-blue-500/40 hover:to-blue-600/30 border border-blue-500/30 transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 hover:scale-105 disabled:hover:scale-100"
+          >
             {submitting && <Loader2 size={12} className="animate-spin" />}
-            Salvar
+            {submitting ? "Salvando..." : "Salvar"}
           </button>
         </div>
       </div>
@@ -124,33 +171,41 @@ function ConfirmDelete({ item, onClose, onConfirm, submitting }: {
   item: QuarantineItem; onClose: () => void; onConfirm: () => void; submitting: boolean;
 }) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-sm mx-4 bg-[#0D1117] border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div 
+        className="absolute inset-0 bg-black/50 backdrop-blur-md transition-opacity duration-300 animate-in fade-in"
+        onClick={onClose} 
+      />
+      <div className="relative z-10 w-full max-w-sm bg-gradient-to-br from-[#0D1117] to-[#0A0E13] border border-red-500/20 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-300">
         <div className="px-6 py-5 flex flex-col gap-3">
           <div className="flex items-center gap-3">
-            <span className="flex items-center justify-center w-9 h-9 rounded-xl bg-red-500/10 border border-red-500/20">
-              <Trash2 size={15} className="text-red-400" />
+            <span className="flex items-center justify-center w-10 h-10 rounded-xl bg-red-500/15 border border-red-500/30 animate-pulse">
+              <AlertCircle size={16} className="text-red-400" />
             </span>
             <div>
-              <p className="text-sm font-semibold text-white">Remover item</p>
+              <p className="text-sm font-bold text-white">Remover item</p>
               <p className="text-xs text-gray-500 mt-0.5">Esta ação não pode ser desfeita.</p>
             </div>
           </div>
-          <div className="rounded-xl bg-[#080B10] border border-white/5 px-4 py-3">
-            <p className="text-xs font-mono text-white/80">{item.code}</p>
-            {item.observation && <p className="text-[10px] text-gray-500 mt-1 leading-relaxed line-clamp-2">{item.observation}</p>}
+          <div className="rounded-xl bg-white/[0.02] border border-red-500/20 px-4 py-3">
+            <p className="text-xs font-mono text-white/80 font-semibold">{item.code}</p>
+            {item.observation && <p className="text-[10px] text-gray-500 mt-1.5 leading-relaxed line-clamp-2">{item.observation}</p>}
           </div>
         </div>
-        <div className="px-6 pb-5 flex gap-3">
-          <button onClick={onClose}
-            className="flex-1 py-2.5 rounded-xl text-xs font-semibold text-gray-400 border border-white/10 hover:bg-white/5 hover:text-white transition-colors">
+        <div className="px-6 pb-5 flex gap-3 border-t border-white/5">
+          <button 
+            onClick={onClose}
+            className="flex-1 py-2.5 rounded-xl text-xs font-semibold text-gray-400 border border-white/10 hover:bg-white/5 hover:text-white transition-all duration-200 hover:scale-105"
+          >
             Cancelar
           </button>
-          <button onClick={onConfirm} disabled={submitting}
-            className="flex-1 py-2.5 rounded-xl text-xs font-semibold text-white bg-red-500/20 hover:bg-red-500/30 border border-red-500/20 transition-colors disabled:opacity-40 flex items-center justify-center gap-2">
+          <button 
+            onClick={onConfirm} 
+            disabled={submitting}
+            className="flex-1 py-2.5 rounded-xl text-xs font-semibold text-white bg-red-500/20 hover:bg-red-500/30 border border-red-500/30 transition-all duration-200 disabled:opacity-40 flex items-center justify-center gap-2 hover:scale-105 disabled:hover:scale-100"
+          >
             {submitting && <Loader2 size={12} className="animate-spin" />}
-            Remover
+            {submitting ? "Removendo..." : "Remover"}
           </button>
         </div>
       </div>
@@ -186,8 +241,6 @@ function ShareCard({
     },
   ].filter((g) => g.items.length > 0);
 
-  // Helper for consistent badge styling to fix html2canvas issues
- // Helper simplificado: removemos a borda e o fundo para o html2canvas não bugar
   const badgeStyle = (color: string, bg: string, border: string) => ({
     fontSize: 11,
     fontWeight: 800,
@@ -468,16 +521,22 @@ export default function QuarentenaPage() {
 
       {/* ── Share Modal ── */}
       {shareOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setShareOpen(false)} />
-          <div className="relative z-10 w-full max-w-2xl max-h-[90vh] mx-4 bg-[#0D1117] border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div 
+            className="absolute inset-0 bg-black/50 backdrop-blur-md transition-opacity duration-300 animate-in fade-in"
+            onClick={() => setShareOpen(false)} 
+          />
+          <div className="relative z-10 w-full max-w-2xl max-h-[90vh] bg-gradient-to-br from-[#0D1117] to-[#0A0E13] border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-300 flex flex-col">
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 shrink-0">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-white/5 shrink-0 bg-gradient-to-r from-white/[0.03] to-transparent">
               <div className="flex items-center gap-2">
                 <Share2 size={14} className="text-blue-400" />
-                <h2 className="text-sm font-semibold text-white tracking-tight">Compartilhar situação</h2>
+                <h2 className="text-sm font-bold text-white tracking-tight">Compartilhar situação</h2>
               </div>
-              <button onClick={() => setShareOpen(false)} className="p-1.5 rounded-lg text-gray-500 hover:text-white hover:bg-white/5 transition-colors">
+              <button 
+                onClick={() => setShareOpen(false)} 
+                className="p-1.5 rounded-lg text-gray-500 hover:text-white hover:bg-white/10 transition-all duration-200 hover:scale-110"
+              >
                 <X size={14} />
               </button>
             </div>
@@ -491,14 +550,19 @@ export default function QuarentenaPage() {
 
             {/* Footer */}
             <div className="px-6 pb-5 pt-3 border-t border-white/5 flex gap-3 shrink-0">
-              <button onClick={() => setShareOpen(false)}
-                className="flex-1 py-2.5 rounded-xl text-xs font-semibold text-gray-400 border border-white/10 hover:bg-white/5 hover:text-white transition-colors">
+              <button 
+                onClick={() => setShareOpen(false)}
+                className="flex-1 py-2.5 rounded-xl text-xs font-semibold text-gray-400 border border-white/10 hover:bg-white/5 hover:text-white transition-all duration-200 hover:scale-105"
+              >
                 Fechar
               </button>
-              <button onClick={handleCapture} disabled={capturing}
-                className="flex-1 py-2.5 rounded-xl text-xs font-semibold text-white bg-blue-500/15 hover:bg-blue-500/25 border border-blue-500/20 transition-colors disabled:opacity-40 flex items-center justify-center gap-2">
+              <button 
+                onClick={handleCapture} 
+                disabled={capturing}
+                className="flex-1 py-2.5 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-blue-500/30 to-blue-600/20 hover:from-blue-500/40 hover:to-blue-600/30 border border-blue-500/30 transition-all duration-200 disabled:opacity-40 flex items-center justify-center gap-2 hover:scale-105 disabled:hover:scale-100"
+              >
                 {capturing ? <Loader2 size={12} className="animate-spin" /> : <Download size={12} />}
-                Baixar imagem
+                {capturing ? "Capturando..." : "Baixar"}
               </button>
             </div>
           </div>
@@ -519,22 +583,22 @@ export default function QuarentenaPage() {
           onClose={() => setDeleteItem(null)} onConfirm={handleDelete} />
       )}
 
-      <div className="h-full flex flex-col gap-6 p-1 animate-in fade-in duration-300">
+      <div className="h-full flex flex-col gap-6 p-1 animate-in fade-in duration-500">
 
         {/* ═══ HEADER ═════════════════════════════════════════════════ */}
-        <div className="flex items-center justify-between border-b border-white/5 pb-5">
+        <div className="flex items-center justify-between border-b border-white/5 pb-5 animate-in slide-in-from-top-2 duration-500">
           <div>
-            <h1 className="text-xl font-bold tracking-tight text-white">
+            <h1 className="text-2xl font-bold tracking-tight text-white">
               Quarentena
             </h1>
-            <p className="text-xs text-gray-500 mt-1">Produtos em restrição operacional · Armazém G300</p>
+            <p className="text-xs text-gray-500 mt-1.5">Produtos em restrição operacional · Armazém G300</p>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             {/* Compartilhar — visível para todos */}
             <button
               onClick={() => setShareOpen(true)}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.02] text-gray-500 hover:text-blue-400 hover:bg-blue-500/5 hover:border-blue-500/20 text-xs font-semibold transition-all"
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.02] text-gray-500 hover:text-blue-400 hover:bg-blue-500/10 hover:border-blue-500/30 text-xs font-semibold transition-all duration-200 hover:scale-105"
             >
               <Share2 size={13} />
               Compartilhar
@@ -545,7 +609,7 @@ export default function QuarentenaPage() {
                 {/* Exportar Excel */}
                 <button
                   onClick={handleExport}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.02] text-gray-500 hover:text-emerald-400 hover:bg-emerald-500/5 hover:border-emerald-500/20 text-xs font-semibold transition-all"
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.02] text-gray-500 hover:text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/30 text-xs font-semibold transition-all duration-200 hover:scale-105"
                 >
                   <FileSpreadsheet size={13} />
                   Exportar
@@ -554,7 +618,7 @@ export default function QuarentenaPage() {
                 {/* Adicionar */}
                 <button
                   onClick={openAdd}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/[0.05] border border-white/10 text-gray-300 hover:text-white hover:bg-white/[0.08] text-xs font-semibold transition-all"
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-gradient-to-r from-blue-500/20 to-blue-600/10 border border-blue-500/30 text-blue-300 hover:text-blue-200 hover:from-blue-500/30 hover:to-blue-600/20 text-xs font-semibold transition-all duration-200 hover:scale-105"
                 >
                   <Plus size={13} />
                   Adicionar
@@ -562,8 +626,10 @@ export default function QuarentenaPage() {
               </>
             )}
 
-            <button onClick={fetchData}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.02] text-gray-400 hover:text-white hover:bg-white/[0.05] text-xs font-semibold transition-all">
+            <button 
+              onClick={fetchData}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-white/10 bg-white/[0.02] text-gray-400 hover:text-white hover:bg-white/[0.05] text-xs font-semibold transition-all duration-200 hover:scale-105"
+            >
               <RefreshCw size={13} className={loading ? "animate-spin" : ""} />
               Atualizar
             </button>
@@ -573,42 +639,71 @@ export default function QuarentenaPage() {
         {/* ═══ STAT CARDS ══════════════════════════════════════════════ */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[
-            { label: "Total Itens", value: totalItems,     color: "text-white" },
-            { label: "Pendentes",   value: pending.length, color: "text-amber-500" },
-            { label: "Resolvidos",  value: resolvedCnt,    color: "text-emerald-500" },
-          ].map((s) => (
-            <div key={s.label} className="bg-[#0D1117] border border-white/5 rounded-xl p-4 shadow-sm">
-              <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">{s.label}</span>
-              <div className={cn("text-2xl font-semibold mt-1 tracking-tight", s.color)}>
-                {loading ? "—" : s.value}
+            { label: "Total Itens", value: totalItems, color: "text-white", icon: AlertCircle, delay: "delay-0" },
+            { label: "Pendentes", value: pending.length, color: "text-amber-400", icon: Clock, delay: "delay-100" },
+            { label: "Resolvidos", value: resolvedCnt, color: "text-emerald-400", icon: CheckCircle2, delay: "delay-200" },
+          ].map((s) => {
+            const Icon = s.icon;
+            return (
+              <div 
+                key={s.label} 
+                className={cn(
+                  "bg-gradient-to-br from-white/[0.05] to-white/[0.02] border border-white/10 rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-300 hover:border-white/20 hover:scale-105 animate-in fade-in zoom-in-95",
+                  s.delay
+                )}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">{s.label}</span>
+                  <Icon size={14} className={cn("text-gray-600", s.color)} />
+                </div>
+                <div className={cn("text-3xl font-bold tracking-tight", s.color)}>
+                  {loading ? <span className="text-gray-400">—</span> : s.value}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* ═══ FILTERS ════════════════════════════════════════════════ */}
-        <div className="flex items-center justify-between gap-4 flex-wrap">
-          <div className="relative flex-1 min-w-[280px]">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500" size={14} />
-            <input value={search} onChange={(e) => setSearch(e.target.value)}
+        <div className="flex items-center justify-between gap-4 flex-wrap animate-in slide-in-from-bottom-2 duration-500">
+          <div className="relative flex-1 min-w-[280px] group">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 group-focus-within:text-blue-400 transition-colors duration-200" size={14} />
+            <input 
+              value={search} 
+              onChange={(e) => setSearch(e.target.value)}
               placeholder="Buscar por código, descrição ou observação..."
-              className="w-full bg-[#0D1117] border border-white/10 rounded-xl pl-10 pr-4 py-2 text-xs text-white focus:outline-none focus:border-white/20 placeholder:text-gray-600 transition-colors" />
+              className="w-full bg-white/[0.02] border border-white/10 rounded-xl pl-10 pr-4 py-2 text-xs text-white focus:outline-none focus:border-blue-500/50 focus:bg-white/[0.04] placeholder:text-gray-600 transition-all duration-200" 
+            />
           </div>
           <div className="flex items-center gap-3 flex-wrap">
-            <div className="flex bg-[#0D1117] border border-white/5 rounded-xl p-1 gap-1">
+            <div className="flex bg-white/[0.02] border border-white/10 rounded-xl p-1 gap-1">
               {(["Todas", "BR", "AG"] as const).map((c) => (
-                <button key={c} onClick={() => setCompanyFilter(c)}
-                  className={cn("px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150",
-                    companyFilter === c ? "bg-white/10 text-white shadow-sm" : "text-gray-500 hover:text-gray-300")}>
+                <button 
+                  key={c} 
+                  onClick={() => setCompanyFilter(c)}
+                  className={cn(
+                    "px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 transform hover:scale-105",
+                    companyFilter === c 
+                      ? "bg-gradient-to-r from-blue-500/30 to-blue-600/20 text-blue-300 border border-blue-500/30 shadow-lg shadow-blue-500/20" 
+                      : "text-gray-500 hover:text-gray-300 hover:bg-white/[0.05]"
+                  )}
+                >
                   {c === "Todas" ? "Empresa" : c}
                 </button>
               ))}
             </div>
-            <div className="flex bg-[#0D1117] border border-white/5 rounded-xl p-1 gap-1">
+            <div className="flex bg-white/[0.02] border border-white/10 rounded-xl p-1 gap-1">
               {(["Todos", "Pendente", "Resolvido"] as const).map((s) => (
-                <button key={s} onClick={() => setStatusFilter(s)}
-                  className={cn("px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150",
-                    statusFilter === s ? "bg-white/10 text-white shadow-sm" : "text-gray-500 hover:text-gray-300")}>
+                <button 
+                  key={s} 
+                  onClick={() => setStatusFilter(s)}
+                  className={cn(
+                    "px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 transform hover:scale-105",
+                    statusFilter === s 
+                      ? "bg-gradient-to-r from-emerald-500/30 to-emerald-600/20 text-emerald-300 border border-emerald-500/30 shadow-lg shadow-emerald-500/20" 
+                      : "text-gray-500 hover:text-gray-300 hover:bg-white/[0.05]"
+                  )}
+                >
                   {s}
                 </button>
               ))}
@@ -617,7 +712,7 @@ export default function QuarentenaPage() {
         </div>
 
         {/* ═══ TABLE ══════════════════════════════════════════════════ */}
-        <div className="flex-1 bg-[#0D1117] border border-white/5 rounded-2xl overflow-hidden flex flex-col shadow-sm min-h-0">
+        <div className="flex-1 bg-gradient-to-br from-white/[0.02] to-white/[0.01] border border-white/10 rounded-2xl overflow-hidden flex flex-col shadow-sm min-h-0 animate-in fade-in duration-500">
           <div className="overflow-x-auto overflow-y-auto custom-scrollbar flex-1">
             <table className="w-full border-separate border-spacing-0 table-fixed">
               <colgroup>
@@ -629,15 +724,17 @@ export default function QuarentenaPage() {
                 <col style={{ width: "8%"  }} />
                 {isAdmin && <col style={{ width: "9%" }} />}
               </colgroup>
-              <thead className="sticky top-0 z-10 bg-[#0D1117]">
-                <tr className="border-b border-white/5">
+              <thead className="sticky top-0 z-10 bg-gradient-to-r from-white/[0.03] to-white/[0.01]">
+                <tr className="border-b border-white/10">
                   {["Código", "Descrição do Produto", "Qtd.", "Tipo", "Observações", "Resolvido", ...(isAdmin ? ["Ações"] : [])].map((h) => (
-                    <th key={h}
-                        className={cn(
-                          "text-left text-[10px] font-bold text-gray-500 uppercase tracking-wider border-b border-white/5 whitespace-nowrap",
-                          h === "Qtd." ? "px-2 py-3" : "px-4 py-3",
-                          (h === "Resolvido" || h === "Ações") && "text-center"
-                        )}>
+                    <th 
+                      key={h}
+                      className={cn(
+                        "text-left text-[10px] font-bold text-gray-500 uppercase tracking-wider border-b border-white/10 whitespace-nowrap",
+                        h === "Qtd." ? "px-2 py-3" : "px-4 py-3",
+                        (h === "Resolvido" || h === "Ações") && "text-center"
+                      )}
+                    >
                       {h}
                     </th>
                   ))}
@@ -659,52 +756,67 @@ export default function QuarentenaPage() {
                     </td>
                   </tr>
                 ) : (
-                  processedItems.map((item) => {
+                  processedItems.map((item, idx) => {
                     const desc       = descMap[item.code?.trim().toUpperCase()] ?? "—";
                     const isAG       = (item.company ?? "").toUpperCase() === "AG";
                     const isUpdating = updatingId === item.id;
                     return (
-                      <tr key={item.id}
-                          className={cn(
-                            "group transition-all duration-150 border-b border-white/[0.02]",
-                            item.resolved ? "opacity-35 hover:opacity-50" : "hover:bg-white/[0.01]"
-                          )}>
+                      <tr 
+                        key={item.id}
+                        className={cn(
+                          "group transition-all duration-200 border-b border-white/[0.02] animate-in fade-in slide-in-from-left-2",
+                          item.resolved 
+                            ? "opacity-40 hover:opacity-60 bg-white/[0.01]" 
+                            : "hover:bg-white/[0.04] hover:border-white/10"
+                        )}
+                        style={{ animationDelay: `${idx * 25}ms` }}
+                      >
                         {/* Código */}
-                        <td className={cn("px-4 py-3.5 border-b border-white/[0.02] text-xs tracking-wider text-white/90",
-                          item.isDuplicate && "text-red-400 bg-red-950/20")}>
+                        <td className={cn(
+                          "px-4 py-3.5 border-b border-white/[0.02] text-xs tracking-wider font-semibold transition-colors duration-200",
+                          item.isDuplicate ? "text-red-400 bg-red-950/20" : "text-white/90"
+                        )}>
                           {item.code ?? "—"}
                         </td>
                         {/* Descrição */}
-                        <td className="px-4 py-3.5 border-b border-white/[0.02] text-xs text-gray-400">
+                        <td className="px-4 py-3.5 border-b border-white/[0.02] text-xs text-gray-400 group-hover:text-gray-300 transition-colors duration-200">
                           <span className="line-clamp-2 leading-relaxed">{desc}</span>
                         </td>
                         {/* Quantidade */}
-                        <td className="px-2 py-3.5 border-b border-white/[0.02] text-xs text-white/90 text-center whitespace-nowrap">
+                        <td className="px-2 py-3.5 border-b border-white/[0.02] text-xs text-white/90 text-center whitespace-nowrap font-semibold">
                           {(item.quantity ?? 0).toLocaleString("pt-BR")}
                         </td>
                         {/* Tipo */}
                         <td className="px-4 py-3.5 border-b border-white/[0.02] text-xs">
-                          <span className={cn("px-2 py-0.5 rounded border text-[9px] uppercase",
-                            isAG ? "bg-blue-500/10 border-blue-500/20 text-blue-400"
-                                 : "bg-emerald-500/10 border-emerald-500/20 text-emerald-400")}>
+                          <span className={cn(
+                            "px-2 py-0.5 rounded border text-[9px] uppercase font-bold transition-all duration-200",
+                            isAG 
+                              ? "bg-blue-500/15 border-blue-500/30 text-blue-400 group-hover:bg-blue-500/25 group-hover:border-blue-500/40" 
+                              : "bg-emerald-500/15 border-emerald-500/30 text-emerald-400 group-hover:bg-emerald-500/25 group-hover:border-emerald-500/40"
+                          )}>
                             {item.company ?? "BR"}
                           </span>
                         </td>
                         {/* Observações */}
-                        <td className="px-4 py-3.5 border-b border-white/[0.02] text-xs text-gray-400">
+                        <td className="px-4 py-3.5 border-b border-white/[0.02] text-xs text-gray-400 group-hover:text-gray-300 transition-colors duration-200">
                           <span className="leading-relaxed block">{item.observation ?? "—"}</span>
                         </td>
                         {/* Resolvido */}
                         <td className="px-4 py-3.5 border-b border-white/[0.02]">
                           <div className="flex items-center justify-center">
-                            <button onClick={() => toggleResolved(item)} disabled={!isAdmin || isUpdating}
+                            <button 
+                              onClick={() => toggleResolved(item)} 
+                              disabled={!isAdmin || isUpdating}
                               className={cn(
-                                "relative inline-flex h-5 w-10 shrink-0 cursor-pointer rounded-full p-0.5 transition-colors duration-200 ease-in-out focus:outline-none",
-                                item.resolved ? "bg-emerald-500/80" : "bg-[#1e293b] border border-white/5",
-                                (!isAdmin || isUpdating) && "cursor-not-allowed opacity-50"
-                              )}>
+                                "relative inline-flex h-5 w-10 shrink-0 cursor-pointer rounded-full p-0.5 transition-all duration-300 ease-in-out focus:outline-none transform hover:scale-110",
+                                item.resolved 
+                                  ? "bg-emerald-500/80 shadow-lg shadow-emerald-500/30" 
+                                  : "bg-[#1e293b] border border-white/10 hover:border-white/20",
+                                (!isAdmin || isUpdating) && "cursor-not-allowed opacity-50 hover:scale-100"
+                              )}
+                            >
                               <span className={cn(
-                                "pointer-events-none inline-flex h-4 w-4 transform items-center justify-center rounded-full bg-white transition-transform duration-200 ease-in-out shadow-sm",
+                                "pointer-events-none inline-flex h-4 w-4 transform items-center justify-center rounded-full bg-white transition-all duration-300 ease-in-out shadow-sm",
                                 item.resolved ? "translate-x-5" : "translate-x-0"
                               )}>
                                 {isUpdating && <Loader2 size={8} className="animate-spin text-gray-400" />}
@@ -715,13 +827,19 @@ export default function QuarentenaPage() {
                         {/* Ações */}
                         {isAdmin && (
                           <td className="px-3 py-3.5 border-b border-white/[0.02]">
-                            <div className="flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-                              <button onClick={() => openEdit(item)} title="Editar"
-                                className="p-1.5 rounded-lg text-gray-500 hover:text-blue-400 hover:bg-blue-500/10 transition-colors">
+                            <div className="flex items-center justify-center gap-1 opacity-0 group-hover:opacity-100 transition-all duration-200">
+                              <button 
+                                onClick={() => openEdit(item)} 
+                                title="Editar"
+                                className="p-1.5 rounded-lg text-gray-500 hover:text-blue-400 hover:bg-blue-500/15 transition-all duration-200 transform hover:scale-110"
+                              >
                                 <Pencil size={11} />
                               </button>
-                              <button onClick={() => setDeleteItem(item)} title="Remover"
-                                className="p-1.5 rounded-lg text-gray-500 hover:text-red-400 hover:bg-red-500/10 transition-colors">
+                              <button 
+                                onClick={() => setDeleteItem(item)} 
+                                title="Remover"
+                                className="p-1.5 rounded-lg text-gray-500 hover:text-red-400 hover:bg-red-500/15 transition-all duration-200 transform hover:scale-110"
+                              >
                                 <Trash2 size={11} />
                               </button>
                             </div>
@@ -734,9 +852,9 @@ export default function QuarentenaPage() {
               </tbody>
             </table>
           </div>
-          <div className="px-4 py-3 border-t border-white/5 bg-black/10 flex items-center justify-between shrink-0">
+          <div className="px-4 py-3 border-t border-white/10 bg-gradient-to-r from-white/[0.01] to-transparent flex items-center justify-between shrink-0">
             <span className="text-[10px] font-semibold text-gray-500 uppercase">
-              {processedItems.length} registros
+              {processedItems.length} {processedItems.length === 1 ? "registro" : "registros"}
             </span>
           </div>
         </div>
